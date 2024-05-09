@@ -55,12 +55,14 @@
 </head>
 <body>
     <form>
+        <label for="search">Search Destination:</label>
+        <input type="text" id="search" oninput="filterDestinations()">
         <label for="destination">Select Destination:</label>
         <select id="destination">
             <!-- Options will be populated dynamically using JavaScript -->
         </select>
         <label for="rate">Rate:</label>
-        <input type="text" id="rate">
+        <input type="text" id="rate" value="0">
         <label for="date">Effective Date:</label>
         <input type="date" id="date" value="">
         <label for="carrier">Carrier:</label>
@@ -131,17 +133,51 @@
             });
         }
 
+        // Function to filter destinations based on user input
+        function filterDestinations() {
+            const searchInput = document.getElementById('search').value.toLowerCase();
+            const keywords = searchInput.split(' ').filter(keyword => keyword.trim() !== ''); // Split input into keywords
+
+            const options = document.getElementById('destination').options;
+            let firstOptionSelected = false; // Flag to track if the first matched option is selected
+
+            for (let i = 0; i < options.length; i++) {
+                const optionText = options[i].text.toLowerCase();
+                let matched = true; // Flag to track if all keywords match the option
+
+                for (const keyword of keywords) {
+                    if (optionText.indexOf(keyword) === -1) {
+                        matched = false;
+                        break;
+                    }
+                }
+
+                if (matched) {
+                    options[i].style.display = 'block';
+                    if (!firstOptionSelected) {
+                        options[i].selected = true; // Select the first matched option
+                        firstOptionSelected = true;
+                    }
+                } else {
+                    options[i].style.display = 'none';
+                }
+            }
+        }
+
+
 
         // Function to add selected destination to the CSV content
         function addToCSV() {
             // Get selected destination, rate, date, carrier, and quality values
             const destination = document.getElementById('destination').value;
             const rate = document.getElementById('rate').value;
-            const date = document.getElementById('date').value || new Date().toISOString().slice(0, 10); // Default to today's
+            const date = document.getElementById('date').value || new Date().toISOString().slice(0, 10); // Default to today's date
+            
+
+            
             // Append destination and its codes to the CSV content
             const codes = dataset.filter(row => row[0].trim() === destination).map(row => row[1].trim());
             codes.forEach(code => {
-                
                 csvContent += `${destination},${code},1,1,${rate},${date}\n`; // Data rows
             });
 
@@ -150,6 +186,13 @@
 
         // Function to download the CSV file
         function downloadCSV() {
+            const carrier = document.getElementById('carrier').value;
+            // Validate carrier name
+            if (!carrier.trim()) {
+                alert('Please enter the carrier name.');
+                return;
+            }
+
             if (!csvContent) {
                 console.error('No data to download.');
                 return;
