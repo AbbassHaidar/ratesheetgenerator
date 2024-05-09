@@ -51,6 +51,18 @@
         button:hover {
             background-color: #0056b3;
         }
+
+        .flex-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        .flex-item {
+            flex: 1;
+            margin-right: 10px;
+        }
     </style>
 </head>
 <body>
@@ -65,18 +77,27 @@
         <input type="text" id="rate" value="0.">
         <label for="date">Effective Date:</label>
         <input type="date" id="date" value="">
-        <label for="carrier">Carrier:</label>
-        <input type="text" id="carrier">
-        <label for="quality">Quality:</label>
-        <select id="quality">
-            <option value="STD">STD</option>
-            <option value="PREM">PREM</option>
-            <option value="CLI">CLI</option>
-            <option value="WHS">WHS</option>
-            <option value="NCLI">NCLI</option>
-        </select>
         <button type="button" onclick="addToCSV()">Add to CSV</button>
-        <button type="button" onclick="downloadCSV()">Download CSV</button>
+
+        <div class="flex-container">
+            <div class="flex-item">
+                <label for="carrier">Carrier:</label>
+                <input type="text" id="carrier">
+            </div>
+            <div class="flex-item">
+                <label for="quality">Quality:</label>
+                <select id="quality">
+                    <option value="STD">STD</option>
+                    <option value="PREM">PREM</option>
+                    <option value="CLI">CLI</option>
+                    <option value="WHS">WHS</option>
+                    <option value="NCLI">NCLI</option>
+                </select>
+            </div>
+            <div class="flex-item">
+                <button type="button" onclick="downloadCSV()">Download CSV</button>
+            </div>
+        </div>
     </form>
 
     <script>
