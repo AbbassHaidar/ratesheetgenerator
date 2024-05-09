@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Destination Selector</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+
+        form {
+            max-width: 500px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        input[type="text"],
+        input[type="date"],
+        select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+
+        button {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <form>
+        <label for="destination">Select Destination:</label>
+        <select id="destination">
+            <!-- Options will be populated dynamically using JavaScript -->
+        </select>
+        <label for="rate">Rate:</label>
+        <input type="text" id="rate">
+        <label for="date">Effective Date:</label>
+        <input type="date" id="date" value="">
+        <label for="carrier">Carrier:</label>
+        <input type="text" id="carrier">
+        <label for="quality">Quality:</label>
+        <select id="quality">
+            <option value="STD">STD</option>
+            <option value="PREM">PREM</option>
+            <option value="CLI">CLI</option>
+            <option value="WHS">WHS</option>
+            <option value="NCLI">NCLI</option>
+        </select>
+        <button type="button" onclick="addToCSV()">Add to CSV</button>
+        <button type="button" onclick="downloadCSV()">Download CSV</button>
+    </form>
+
+    <script>
+        let dataset = []; // Array to store dataset rows
+        let csvContent = ''; // Variable to store CSV content
+        csvContent += `Destination,Code,Rate,MC,CI,Effective Date\n`; // Header row
+
+        // Function to fetch the CSV file from the server
+        function fetchCSV() {
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', 'dataset.csv', true);
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4) {
+                    if (xhr.status === 200) {
+                        console.log('CSV content:', xhr.responseText);
+                        processData(xhr.responseText);
+                    } else {
+                        console.error('Failed to fetch the CSV file:', xhr.statusText);
+                    }
+                }
+            };
+            xhr.send();
+        }
+
+        // Function to process CSV data
+        function processData(content) {
+            if (!content) {
+                console.error('CSV content is empty or undefined.');
+                return;
+            }
+
+            console.log('Processing CSV data...');
+            console.log('Content:', content); // Log the content
+            dataset = content.split('\n').map(row => row.split(','));
+            console.log('Dataset:', dataset);
+
+            // Use a Set to efficiently store unique destination names
+            const destinationsSet = new Set();
+            dataset.forEach(row => {
+                destinationsSet.add(row[0].trim());
+            });
+
+            // Convert Set to array and sort alphabetically
+            const destinations = Array.from(destinationsSet).sort();
+
+            console.log('Destinations:', destinations);
+
+            // Populate the dropdown list with destination names
+            const destinationSelect = document.getElementById('destination');
+            destinations.forEach(destination => {
+                const option = document.createElement('option');
+                option.text = destination;
+                destinationSelect.add(option);
+            });
+        }
+
+
+        // Function to add selected destination to the CSV content
+        function addToCSV() {
+            // Get selected destination, rate, date, carrier, and quality values
+            const destination = document.getElementById('destination').value;
+            const rate = document.getElementById('rate').value;
+            const date = document.getElementById('date').value || new Date().toISOString().slice(0, 10); // Default to today's
+            // Append destination and its codes to the CSV content
+            const codes = dataset.filter(row => row[0].trim() === destination).map(row => row[1].trim());
+            codes.forEach(code => {
+                
+                csvContent += `${destination},${code},1,1,${rate},${date}\n`; // Data rows
+            });
+
+            console.log('Added to CSV:', csvContent);
+        }
+
+        // Function to download the CSV file
+        function downloadCSV() {
+            if (!csvContent) {
+                console.error('No data to download.');
+                return;
+            }
+
+            // Create a blob containing the CSV content
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+
+            // Create a download link and trigger the download
+            const downloadLink = document.createElement('a');
+            const filename = `IN-Org-${document.getElementById('carrier').value}-${document.getElementById('quality').value}-rates(${new Date().toISOString().slice(0, 10)}).csv`;
+            downloadLink.href = window.URL.createObjectURL(blob);
+            downloadLink.download = filename; // Set filename
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
+
+            // Reset CSV content after download
+            csvContent = '';
+        }
+
+        // Call fetchCSV() function to fetch the CSV file when the page loads
+        window.onload = function() {
+            fetchCSV();
+        };
+    </script>
+</body>
+</html>
