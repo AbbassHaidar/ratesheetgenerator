@@ -121,7 +121,14 @@
         <input type="text" id="rate" value="0.">
         <label for="date">Effective Date:</label>
         <input type="date" id="date" value="">
-        <button type="button" onclick="addToXLSX()">Add to XLSX</button>
+                <label for="changes">Changes:</label>
+                <select id="changes">
+                    <option value=" "></option>
+                    <option value="increase">Increase</option>
+                    <option value="decrease">Decrease</option>
+                    <option value="new">New</option>
+                </select>
+            <button type="button" onclick="addToXLSX()">Add to XLSX</button>
         <div id="addedDestinations">
             <h2>Added Destinations:</h2>
             <ul id="addedDestinationsList">
@@ -142,15 +149,6 @@
                     <option value="CLI">CLI</option>
                     <option value="WHS">WHS</option>
                     <option value="NCLI">NCLI</option>
-                </select>
-            </div>
-            <div class="flex-item">
-                <label for="changes">Changes:</label>
-                <select id="changes">
-                    <option value=" "></option>
-                    <option value="increase">Increase</option>
-                    <option value="decrease">Decrease</option>
-                    <option value="new">New</option>
                 </select>
             </div>
             <div class="flex-item">
@@ -247,6 +245,9 @@
             }
         }
 
+        // Maintain a Set to keep track of added destinations
+        let addedDestinationsSet = new Set();
+
         // Function to add selected destination to the XLSX content and display it
         function addToXLSX() {
             // Check if xlsxContent is null
@@ -263,11 +264,16 @@
             const quality = document.getElementById('quality').value;
             const changes = document.getElementById('changes').value;
 
+            // Check if destination is already added
+            if (addedDestinationsSet.has(destination)) {
+                alert('Destination is already added.');
+                return;
+            }
+
             // Append destination and its codes to the XLSX content
             const codes = dataset.filter(row => row[0].trim() === destination).map(row => row[1].trim());
             codes.forEach(code => {
                 xlsxContent.push([destination, code, rate, 1, 1, date, changes]); // Data rows
-                console.log('Destinations:', destination);
             });
 
             // Display added destination in the addedDestinations section
@@ -275,7 +281,11 @@
             const li = document.createElement('li');
             li.textContent = `${destination} - ${rate}`;
             addedDestinationsList.appendChild(li);
+
+            // Add destination to the set of added destinations
+            addedDestinationsSet.add(destination);
         }
+
 
 
 
@@ -317,6 +327,7 @@
             // Clear added destinations list
             const addedDestinationsList = document.getElementById('addedDestinationsList');
             addedDestinationsList.innerHTML = '';
+            addedDestinationsSet.clear();
         }
 
 
