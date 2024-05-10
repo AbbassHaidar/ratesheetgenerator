@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Destination Selector</title>
     <style>
+        /* Enhanced CSS for the Entire Form */
         body {
             font-family: Arial, sans-serif;
             margin: 0;
@@ -13,7 +14,7 @@
         }
 
         form {
-            max-width: 500px;
+            max-width: 600px;
             margin: 0 auto;
             background-color: #fff;
             padding: 20px;
@@ -21,7 +22,7 @@
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
 
-        label {
+        form label {
             display: block;
             margin-bottom: 5px;
         }
@@ -63,6 +64,49 @@
             flex: 1;
             margin-right: 10px;
         }
+
+        /* CSS for Carrier Quality Changes and Download XLSX Section */
+        .carrier-quality-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .carrier-quality-container .form-group {
+            flex: 1;
+            margin-right: 10px;
+        }
+
+        .carrier-quality-container .form-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .carrier-quality-container .form-group select,
+        .carrier-quality-container .form-group input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+
+        .carrier-quality-container .form-group button {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .carrier-quality-container .form-group button:hover {
+            background-color: #0056b3;
+        }
     </style>
 </head>
 <body>
@@ -78,6 +122,12 @@
         <label for="date">Effective Date:</label>
         <input type="date" id="date" value="">
         <button type="button" onclick="addToXLSX()">Add to XLSX</button>
+        <div id="addedDestinations">
+            <h2>Added Destinations:</h2>
+            <ul id="addedDestinationsList">
+                <!-- Added destinations will be dynamically inserted here -->
+            </ul>
+        </div>
 
         <div class="flex-container">
             <div class="flex-item">
@@ -93,18 +143,18 @@
                     <option value="WHS">WHS</option>
                     <option value="NCLI">NCLI</option>
                 </select>
-                </div>
-                <div class="flex-item">
+            </div>
+            <div class="flex-item">
                 <label for="changes">Changes:</label>
                 <select id="changes">
+                    <option value=" "></option>
                     <option value="increase">Increase</option>
                     <option value="decrease">Decrease</option>
                     <option value="new">New</option>
                 </select>
-            
             </div>
             <div class="flex-item">
-                <button type="button" onclick="downloadXLSX()">Download XLSX</button>
+                <button type="button" onclick="downloadXLSX()">Download</button>
             </div>
         </div>
     </form>
@@ -197,8 +247,14 @@
             }
         }
 
-        // Function to add selected destination to the XLSX content
+        // Function to add selected destination to the XLSX content and display it
         function addToXLSX() {
+            // Check if xlsxContent is null
+            if (!xlsxContent) {
+                alert('Please wait until the CSV data is loaded.');
+                return;
+            }
+
             // Get selected destination, rate, date, carrier, and quality values
             const destination = document.getElementById('destination').value;
             const rate = document.getElementById('rate').value;
@@ -210,11 +266,18 @@
             // Append destination and its codes to the XLSX content
             const codes = dataset.filter(row => row[0].trim() === destination).map(row => row[1].trim());
             codes.forEach(code => {
-                xlsxContent.push([destination, code, rate, 1, 1, date,changes]); // Data rows
+                xlsxContent.push([destination, code, rate, 1, 1, date, changes]); // Data rows
+                console.log('Destinations:', destination);
             });
 
-            console.log('Added to XLSX:', xlsxContent);
+            // Display added destination in the addedDestinations section
+            const addedDestinationsList = document.getElementById('addedDestinationsList');
+            const li = document.createElement('li');
+            li.textContent = `${destination} - ${rate}`;
+            addedDestinationsList.appendChild(li);
         }
+
+
 
         // Function to download the XLSX file
         function downloadXLSX() {
@@ -249,8 +312,13 @@
             document.body.removeChild(downloadLink);
 
             // Reset XLSX content after download
-            xlsxContent = null;
+            xlsxContent = [['destination', 'code', 'rate', 'duration', 'increment', 'effective','changes']];
+
+            // Clear added destinations list
+            const addedDestinationsList = document.getElementById('addedDestinationsList');
+            addedDestinationsList.innerHTML = '';
         }
+
 
         // Call fetchCSV() function to fetch the CSV file when the page loads
         window.onload = function() {
