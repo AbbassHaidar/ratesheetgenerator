@@ -128,7 +128,7 @@
                     <option value="decrease">Decrease</option>
                     <option value="new">New</option>
                 </select>
-            <button type="button" onclick="addToXLSX()">Add to XLSX</button>
+            <button type="button" onclick="addToCSV()">Add to CSV</button>
         <div id="addedDestinations">
             <h2>Added Destinations:</h2>
             <ul id="addedDestinationsList">
@@ -152,7 +152,7 @@
                 </select>
             </div>
             <div class="flex-item">
-                <button type="button" onclick="downloadXLSX()">Download</button>
+                <button type="button" onclick="downloadCSV()">Download</button>
             </div>
         </div>
     </form>
@@ -160,7 +160,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.0/xlsx.full.min.js"></script>
     <script>
         let dataset = []; // Array to store dataset rows
-        let xlsxContent = null; // Initialize XLSX content
 
         // Function to fetch the CSV file from the server
         function fetchCSV() {
@@ -210,8 +209,6 @@
                 destinationSelect.add(option);
             });
 
-            // Initialize XLSX content with header row
-            xlsxContent = [['destination', 'code', 'rate', 'duration', 'increment', 'effective','changes']];
         }
 
         // Function to filter destinations based on user input
@@ -248,17 +245,14 @@
         // Maintain a Set to keep track of added destinations
         let addedDestinationsSet = new Set();
 
-        // Function to add selected destination to the XLSX content and display it
-        function addToXLSX() {
-            // Check if xlsxContent is null
-            if (!xlsxContent) {
-                alert('Please wait until the CSV data is loaded.');
-                return;
-            }
+       /// Initialize CSV content with header row
+        let csvContent = 'destination,code,rate,duration,increment,effective,changes\n';
 
+        // Function to add selected destination to the CSV content
+        function addToCSV() {
             // Get selected destination, rate, date, carrier, and quality values
             const destination = document.getElementById('destination').value;
-            const rate = document.getElementById('rate').value;
+            const rate = parseFloat(document.getElementById('rate').value); // Parse rate as float
             const date = document.getElementById('date').value || new Date().toISOString().slice(0, 10); // Default to today's date
             const carrier = document.getElementById('carrier').value;
             const quality = document.getElementById('quality').value;
@@ -270,10 +264,17 @@
                 return;
             }
 
-            // Append destination and its codes to the XLSX content
+            // Append destination and its codes to the CSV content
             const codes = dataset.filter(row => row[0].trim() === destination).map(row => row[1].trim());
             codes.forEach(code => {
-                xlsxContent.push([destination, code, rate, 1, 1, date, changes]); // Data rows
+                // Format date using ISO 8601 format
+                const formattedDate = date || new Date().toISOString().slice(0, 10);
+
+                // Ensure changes field is formatted consistently
+                const formattedChanges = changes.trim().toLowerCase();
+
+                // Add destination and its codes to the CSV content
+                csvContent += `${destination},${parseFloat(code)},${rate},1,1,${formattedDate},${formattedChanges}\n`;
             });
 
             // Display added destination in the addedDestinations section
@@ -286,11 +287,8 @@
             addedDestinationsSet.add(destination);
         }
 
-
-
-
-        // Function to download the XLSX file
-        function downloadXLSX() {
+        // Function to download the CSV file
+        function downloadCSV() {
             const carrier = document.getElementById('carrier').value;
             // Validate carrier name
             if (!carrier.trim()) {
@@ -298,37 +296,32 @@
                 return;
             }
 
-            if (!xlsxContent) {
+            if (!csvContent) {
                 console.error('No data to download.');
                 return;
             }
 
-            // Convert XLSX content to binary form
-            const wb = XLSX.utils.book_new();
-            const ws = XLSX.utils.aoa_to_sheet(xlsxContent);
-            XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
-            const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-
-            // Create a blob containing the XLSX content
-            const blob = new Blob([wbout], { type: 'application/octet-stream' });
+            // Create a blob containing the CSV content
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
 
             // Create a download link and trigger the download
             const downloadLink = document.createElement('a');
-            const filename = `IN-Org-${document.getElementById('carrier').value}-${document.getElementById('quality').value}-rates(${new Date().toISOString().slice(0, 10)}).xlsx`;
+            const filename = `IN-Org-${document.getElementById('carrier').value}-${document.getElementById('quality').value}-rates(${new Date().toISOString().slice(0, 10)}).csv`;
             downloadLink.href = window.URL.createObjectURL(blob);
             downloadLink.download = filename; // Set filename
             document.body.appendChild(downloadLink);
             downloadLink.click();
             document.body.removeChild(downloadLink);
 
-            // Reset XLSX content after download
-            xlsxContent = [['destination', 'code', 'rate', 'duration', 'increment', 'effective','changes']];
+            // Reset CSV content after download
+            csvContent = 'destination,code,rate,duration,increment,effective,changes\n';
 
             // Clear added destinations list
             const addedDestinationsList = document.getElementById('addedDestinationsList');
             addedDestinationsList.innerHTML = '';
             addedDestinationsSet.clear();
         }
+
 
 
         // Call fetchCSV() function to fetch the CSV file when the page loads
