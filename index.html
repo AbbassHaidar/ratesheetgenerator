@@ -65,6 +65,7 @@
             margin-right: 10px;
         }
 
+        /* CSS for Carrier Quality Changes and Download XLSX Section */
         .carrier-quality-container {
             display: flex;
             justify-content: space-between;
@@ -82,13 +83,29 @@
             margin-bottom: 5px;
         }
 
-        #prefixResults {
-            margin-top: 10px;
+        .carrier-quality-container .form-group select,
+        .carrier-quality-container .form-group input[type="text"] {
+            width: 100%;
             padding: 10px;
-            background-color: #f9f9f9;
+            margin-bottom: 10px;
             border: 1px solid #ccc;
             border-radius: 4px;
-            display: none;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+
+        .carrier-quality-container .form-group button {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .carrier-quality-container .form-group button:hover {
+            background-color: #0056b3;
         }
     </style>
 </head>
@@ -103,28 +120,26 @@
         <label for="rate">Rate:</label>
         <input type="text" id="rate" value="0.">
         <label for="date">Effective Date:</label>
-        <input type="date" id="date">
-        <label for="changes">Changes:</label>
-        <select id="changes">
-            <option value=" "></option>
-            <option value="increase">Increase</option>
-            <option value="decrease">Decrease</option>
-            <option value="new">New</option>
-        </select>
-        <button type="button" onclick="addToCSV()">Add to CSV</button>
+        <input type="date" id="date" value="">
+                <label for="changes">Changes:</label>
+                <select id="changes">
+                    <option value=" "></option>
+                    <option value="increase">Increase</option>
+                    <option value="decrease">Decrease</option>
+                    <option value="new">New</option>
+                </select>
+            <button type="button" onclick="addToCSV()">Add to CSV</button>
         <div id="addedDestinations">
             <h2>Added Destinations:</h2>
-            <ul id="addedDestinationsList"></ul>
+            <ul id="addedDestinationsList">
+                <!-- Added destinations will be dynamically inserted here -->
+            </ul>
         </div>
 
         <div class="flex-container">
             <div class="flex-item">
                 <label for="carrier">Carrier:</label>
-                <input type="text" id="carrier" oninput="searchCarrierPrefix()">
-                <div id="prefixResults">
-                    <strong>Matching Prefixes:</strong>
-                    <ul id="prefixList"></ul>
-                </div>
+                <input type="text" id="carrier">
             </div>
             <div class="flex-item">
                 <label for="quality">Quality:</label>
@@ -144,117 +159,174 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.0/xlsx.full.min.js"></script>
     <script>
-        let dataset = [];
-        let prefixData = [];
-        let addedDestinationsSet = new Set();
-        let csvContent = 'destination,code,rate,duration,increment,effective,changes\n';
+        let dataset = []; // Array to store dataset rows
 
+        // Function to fetch the CSV file from the server
         function fetchCSV() {
-            const xhr = new XMLHttpRequest();
+            var xhr = new XMLHttpRequest();
             xhr.open('GET', 'dataset.csv', true);
             xhr.onreadystatechange = function() {
-                if (xhr.readyState === 4 && xhr.status === 200) {
-                    processData(xhr.responseText);
+                if (xhr.readyState === 4) {
+                    if (xhr.status === 200) {
+                        console.log('CSV content:', xhr.responseText);
+                        processData(xhr.responseText);
+                    } else {
+                        console.error('Failed to fetch the CSV file:', xhr.statusText);
+                    }
                 }
             };
             xhr.send();
         }
 
+        // Function to process CSV data
         function processData(content) {
+            if (!content) {
+                console.error('CSV content is empty or undefined.');
+                return;
+            }
+
+            console.log('Processing CSV data...');
+            console.log('Content:', content); // Log the content
             dataset = content.split('\n').map(row => row.split(','));
-            const destinations = Array.from(new Set(dataset.map(row => row[0].trim()))).sort();
+            console.log('Dataset:', dataset);
+
+            // Use a Set to efficiently store unique destination names
+            const destinationsSet = new Set();
+            dataset.forEach(row => {
+                destinationsSet.add(row[0].trim());
+            });
+
+            // Convert Set to array and sort alphabetically
+            const destinations = Array.from(destinationsSet).sort();
+
+            console.log('Destinations:', destinations);
+
+            // Populate the dropdown list with destination names
             const destinationSelect = document.getElementById('destination');
             destinations.forEach(destination => {
                 const option = document.createElement('option');
                 option.text = destination;
                 destinationSelect.add(option);
             });
+
         }
 
+        // Function to filter destinations based on user input
         function filterDestinations() {
             const searchInput = document.getElementById('search').value.toLowerCase();
+            const keywords = searchInput.split(' ').filter(keyword => keyword.trim() !== ''); // Split input into keywords
+
             const options = document.getElementById('destination').options;
+            let firstOptionSelected = false; // Flag to track if the first matched option is selected
+
             for (let i = 0; i < options.length; i++) {
-                options[i].style.display = options[i].text.toLowerCase().includes(searchInput) ? 'block' : 'none';
+                const optionText = options[i].text.toLowerCase();
+                let matched = true; // Flag to track if all keywords match the option
+
+                for (const keyword of keywords) {
+                    if (optionText.indexOf(keyword) === -1) {
+                        matched = false;
+                        break;
+                    }
+                }
+
+                if (matched) {
+                    options[i].style.display = 'block';
+                    if (!firstOptionSelected) {
+                        options[i].selected = true; // Select the first matched option
+                        firstOptionSelected = true;
+                    }
+                } else {
+                    options[i].style.display = 'none';
+                }
             }
         }
 
+        // Maintain a Set to keep track of added destinations
+        let addedDestinationsSet = new Set();
+
+       /// Initialize CSV content with header row
+        let csvContent = 'destination,code,rate,duration,increment,effective,changes\n';
+
+        // Function to add selected destination to the CSV content
         function addToCSV() {
+            // Get selected destination, rate, date, carrier, and quality values
             const destination = document.getElementById('destination').value;
-            const rate = parseFloat(document.getElementById('rate').value);
-            const date = document.getElementById('date').value || new Date().toISOString().slice(0, 10);
+            const rate = parseFloat(document.getElementById('rate').value); // Parse rate as float
+            const date = document.getElementById('date').value || new Date().toISOString().slice(0, 10); // Default to today's date
             const carrier = document.getElementById('carrier').value;
             const quality = document.getElementById('quality').value;
             const changes = document.getElementById('changes').value;
 
+            // Check if destination is already added
             if (addedDestinationsSet.has(destination)) {
                 alert('Destination is already added.');
                 return;
             }
 
+            // Append destination and its codes to the CSV content
             const codes = dataset.filter(row => row[0].trim() === destination).map(row => row[1].trim());
             codes.forEach(code => {
-                csvContent += `${destination},${code},${rate},1,1,${date},${changes}\n`;
+                // Format date using ISO 8601 format
+                const formattedDate = date || new Date().toISOString().slice(0, 10);
+
+                // Ensure changes field is formatted consistently
+                const formattedChanges = changes.trim().toLowerCase();
+
+                // Add destination and its codes to the CSV content
+                csvContent += ${destination},${parseFloat(code)},${rate},1,1,${formattedDate},${formattedChanges}\n;
             });
 
+            // Display added destination in the addedDestinations section
+            const addedDestinationsList = document.getElementById('addedDestinationsList');
             const li = document.createElement('li');
-            li.textContent = `${destination} - ${rate}`;
-            document.getElementById('addedDestinationsList').appendChild(li);
+            li.textContent = ${destination} - ${rate};
+            addedDestinationsList.appendChild(li);
 
+            // Add destination to the set of added destinations
             addedDestinationsSet.add(destination);
         }
 
+        // Function to download the CSV file
         function downloadCSV() {
             const carrier = document.getElementById('carrier').value;
+            // Validate carrier name
             if (!carrier.trim()) {
                 alert('Please enter the carrier name.');
                 return;
             }
 
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = `IN-Org-${carrier}-${document.getElementById('quality').value}-rates(${new Date().toISOString().slice(0, 10)}).csv`;
-            link.click();
+            if (!csvContent) {
+                console.error('No data to download.');
+                return;
+            }
 
+            // Create a blob containing the CSV content
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+
+            // Create a download link and trigger the download
+            const downloadLink = document.createElement('a');
+            const filename = IN-Org-${document.getElementById('carrier').value}-${document.getElementById('quality').value}-rates(${new Date().toISOString().slice(0, 10)}).csv;
+            downloadLink.href = window.URL.createObjectURL(blob);
+            downloadLink.download = filename; // Set filename
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
+
+            // Reset CSV content after download
             csvContent = 'destination,code,rate,duration,increment,effective,changes\n';
-            document.getElementById('addedDestinationsList').innerHTML = '';
+
+            // Clear added destinations list
+            const addedDestinationsList = document.getElementById('addedDestinationsList');
+            addedDestinationsList.innerHTML = '';
             addedDestinationsSet.clear();
         }
 
-        function fetchPrefixCSV() {
-            const xhr = new XMLHttpRequest();
-            xhr.open('GET', 'prefix.csv', true);
-            xhr.onreadystatechange = function() {
-                if (xhr.readyState === 4 && xhr.status === 200) {
-                    prefixData = xhr.responseText.split('\n').map(row => row.split(',').map(cell => cell.trim()));
-                }
-            };
-            xhr.send();
-        }
 
-        function searchCarrierPrefix() {
-            const carrierName = document.getElementById('carrier').value.toLowerCase();
-            const quality = document.getElementById('quality').value;
-            const prefixList = document.getElementById('prefixList');
-            prefixList.innerHTML = '';
 
-            const matches = prefixData.filter(row => row[0].toLowerCase() === carrierName && row[1].toLowerCase().includes(quality.toLowerCase()));
-            if (matches.length > 0) {
-                matches.forEach(match => {
-                    const li = document.createElement('li');
-                    li.textContent = match[1];
-                    prefixList.appendChild(li);
-                });
-                document.getElementById('prefixResults').style.display = 'block';
-            } else {
-                document.getElementById('prefixResults').style.display = 'none';
-            }
-        }
-
+        // Call fetchCSV() function to fetch the CSV file when the page loads
         window.onload = function() {
             fetchCSV();
-            fetchPrefixCSV();
         };
     </script>
 </body>
