@@ -274,13 +274,13 @@
                 const formattedChanges = changes.trim().toLowerCase();
 
                 // Add destination and its codes to the CSV content
-                csvContent += ${destination},${parseFloat(code)},${rate},1,1,${formattedDate},${formattedChanges}\n;
+                csvContent += `${destination},${parseFloat(code)},${rate},1,1,${formattedDate},${formattedChanges}\n`;
             });
 
             // Display added destination in the addedDestinations section
             const addedDestinationsList = document.getElementById('addedDestinationsList');
             const li = document.createElement('li');
-            li.textContent = ${destination} - ${rate};
+            li.textContent = `${destination} - ${rate}`;
             addedDestinationsList.appendChild(li);
 
             // Add destination to the set of added destinations
@@ -306,7 +306,7 @@
 
             // Create a download link and trigger the download
             const downloadLink = document.createElement('a');
-            const filename = IN-Org-${document.getElementById('carrier').value}-${document.getElementById('quality').value}-rates(${new Date().toISOString().slice(0, 10)}).csv;
+            const filename = `IN-Org-${document.getElementById('carrier').value}-${document.getElementById('quality').value}-rates(${new Date().toISOString().slice(0, 10)}).csv`;
             downloadLink.href = window.URL.createObjectURL(blob);
             downloadLink.download = filename; // Set filename
             document.body.appendChild(downloadLink);
