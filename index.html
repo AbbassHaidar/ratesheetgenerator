@@ -381,6 +381,17 @@ Clear Matches
 <div class="row" style="margin-top:15px;">
 
 <div class="field">
+<label>Export File Name</label>
+
+<input
+    type="text"
+    id="exportFileName"
+    placeholder="Ratesheet"
+>
+
+</div>
+
+<div class="field">
 <button id="exportBtn">Generate XLSX</button>
 </div>
 
@@ -1212,9 +1223,60 @@ document.getElementById('exportBtn')
 
     });
 
+    const totalRows =
+        startRow + exportRows.length;
+
+    ws['!ref'] =
+        `A1:G${totalRows}`;
+
+    const customName =
+        document.getElementById(
+            'exportFileName'
+        ).value.trim();
+
+    const now = new Date();
+
+    const yyyy =
+        now.getFullYear();
+
+    const mm =
+        String(now.getMonth()+1)
+        .padStart(2,'0');
+
+    const dd =
+        String(now.getDate())
+        .padStart(2,'0');
+
+    const hh =
+        String(now.getHours())
+        .padStart(2,'0');
+
+    const min =
+        String(now.getMinutes())
+        .padStart(2,'0');
+
+    const timestamp =
+        `${yyyy}${mm}${dd}_${hh}${min}`;
+
+    const finalName =
+
+        (customName || 'Ratesheet')
+
+        +
+
+        '_'
+
+        +
+
+        timestamp
+
+        +
+
+        '.xlsx';
+
     XLSX.writeFile(
         wb,
-        'Voice_Ratesheet.xlsx'
+        finalName
     );
 });
 
