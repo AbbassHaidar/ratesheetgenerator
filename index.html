@@ -407,22 +407,80 @@ Clear All
 
 <div class="card">
 
-<h2>Period Exceptions</h2>
+<div
+    style="
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        cursor:pointer;
+    "
+    onclick="toggleExceptions()"
+>
 
-<table>
+    <h2 style="margin:0;">
+        Period Exceptions
+    </h2>
 
-<thead>
-<tr>
-<th>Zone</th>
-<th>Initial</th>
-<th>Recurring</th>
-<th>Actions</th>
-</tr>
-</thead>
+    <button
+        type="button"
+        class="secondary action-btn"
+        id="exceptionsToggleBtn"
+    >
+        Expand
+    </button>
 
-<tbody id="exceptionsBody"></tbody>
+</div>
 
-</table>
+<div
+    id="exceptionsContainer"
+    style="display:none; margin-top:20px;"
+>
+
+    <div class="row">
+
+        <div class="field">
+
+            <label>Search Exceptions</label>
+
+            <input
+                type="text"
+                id="exceptionsSearch"
+                placeholder="latvia, sudan, zain..."
+            >
+
+        </div>
+
+        <div class="field">
+
+            <label>&nbsp;</label>
+
+            <button
+                class="danger"
+                onclick="clearFilteredExceptions()"
+            >
+                Delete Filtered Exceptions
+            </button>
+
+        </div>
+
+    </div>
+
+    <table>
+
+        <thead>
+        <tr>
+            <th>Zone</th>
+            <th>Initial</th>
+            <th>Recurring</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+
+        <tbody id="exceptionsBody"></tbody>
+
+    </table>
+
+</div>
 
 </div>
 
@@ -767,9 +825,29 @@ function renderExceptions(){
     const body =
         document.getElementById('exceptionsBody');
 
+    const search =
+        (
+            document.getElementById(
+                'exceptionsSearch'
+            )?.value || ''
+        )
+        .toLowerCase()
+        .trim();
+
     let html = '';
 
-    Object.keys(zonePeriods).forEach(zone=>{
+    Object.keys(zonePeriods)
+
+    .sort()
+
+    .forEach(zone=>{
+
+        if(
+            search &&
+            !zone.includes(search)
+        ){
+            return;
+        }
 
         const p = zonePeriods[zone];
 
@@ -804,7 +882,91 @@ function renderExceptions(){
         `;
     });
 
+    if(!html){
+
+        html = `
+        <tr>
+            <td colspan="4">
+                No matching exceptions
+            </td>
+        </tr>
+        `;
+    }
+
     body.innerHTML = html;
+
+    updateStats();
+}
+
+function toggleExceptions(){
+
+    const container =
+        document.getElementById(
+            'exceptionsContainer'
+        );
+
+    const btn =
+        document.getElementById(
+            'exceptionsToggleBtn'
+        );
+
+    if(container.style.display === 'none'){
+
+        container.style.display = 'block';
+
+        btn.innerText = 'Collapse';
+
+    }else{
+
+        container.style.display = 'none';
+
+        btn.innerText = 'Expand';
+    }
+}
+
+function clearFilteredExceptions(){
+
+    const search =
+        document.getElementById(
+            'exceptionsSearch'
+        )
+        .value
+        .toLowerCase()
+        .trim();
+
+    if(!search){
+
+        alert(
+            'Please search first'
+        );
+
+        return;
+    }
+
+    const confirmDelete = confirm(
+
+        `Delete all exceptions matching:\n\n${search} ?`
+
+    );
+
+    if(!confirmDelete) return;
+
+    Object.keys(zonePeriods)
+    .forEach(zone=>{
+
+        if(zone.includes(search)){
+
+            delete zonePeriods[zone];
+        }
+
+    });
+
+    localStorage.setItem(
+        'zonePeriods',
+        JSON.stringify(zonePeriods)
+    );
+
+    renderExceptions();
 }
 
 function editException(zone){
@@ -908,6 +1070,12 @@ window.editException = editException;
 
 window.deleteException = deleteException;
 
+window.toggleExceptions =
+    toggleExceptions;
+
+window.clearFilteredExceptions =
+    clearFilteredExceptions;
+
 loadMasterList();
 loadTemplate();
 loadZonePeriods();
@@ -916,6 +1084,12 @@ document.getElementById('quickDate')
 .addEventListener('change',function(){
 
     setDate(parseInt(this.value));
+});
+
+document.getElementById('exceptionsSearch')
+?.addEventListener('input',function(){
+
+    renderExceptions();
 });
 
 document.getElementById('masterFile')
