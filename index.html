@@ -248,7 +248,7 @@ th{
 </div>
 
 <div class="stat-card">
-<div class="stat-title">Added Rows</div>
+<div class="stat-title">Added Codes</div>
 <div class="stat-value" id="addedCount">0</div>
 </div>
 
@@ -668,9 +668,6 @@ function renderMatches(){
                 );
         });
 
-        const saved =
-            zonePeriods[row.zone.toLowerCase()];
-
         html += `
         <div class="match-item">
 
@@ -681,17 +678,6 @@ function renderMatches(){
             <div>
                 Code: ${row.code}
             </div>
-
-            ${
-                saved
-                ?
-                `<div class="badge">
-                    Saved Period:
-                    ${saved.initial}/${saved.recurring}
-                </div>`
-                :
-                ''
-            }
 
         </div>
         `;
@@ -709,11 +695,9 @@ function renderPreview(){
 
     exportRows.forEach(r=>{
 
-        const key = r.zone;
+        if(!grouped[r.zone]){
 
-        if(!grouped[key]){
-
-            grouped[key] = {
+            grouped[r.zone] = {
 
                 zone:r.zone,
 
@@ -729,7 +713,7 @@ function renderPreview(){
             };
         }
 
-        grouped[key].codes.push(r.code);
+        grouped[r.zone].codes.push(r.code);
 
     });
 
@@ -743,17 +727,7 @@ function renderPreview(){
             <td>${group.zone}</td>
 
             <td>
-
-                ${group.codes.slice(0,5).join(', ')}
-
-                ${
-                    group.codes.length > 5
-                    ?
-                    `... +${group.codes.length - 5} more`
-                    :
-                    ''
-                }
-
+                ${group.codes.join(', ')}
             </td>
 
             <td>
@@ -761,7 +735,7 @@ function renderPreview(){
                 <input
                     class="preview-input"
                     value="${group.rate}"
-                    onchange="updateGroupedRows(
+                    onchange="updateGroupedField(
                         '${group.zone}',
                         'rate',
                         this.value
@@ -770,14 +744,26 @@ function renderPreview(){
 
             </td>
 
-            <td>${group.effectiveDate}</td>
+            <td>
+
+                <input
+                    type="date"
+                    value="${group.effectiveDate}"
+                    onchange="updateGroupedField(
+                        '${group.zone}',
+                        'effectiveDate',
+                        this.value
+                    )"
+                >
+
+            </td>
 
             <td>
 
                 <input
                     class="preview-input"
                     value="${group.initial}"
-                    onchange="updateGroupedPeriods(
+                    onchange="updateGroupedField(
                         '${group.zone}',
                         'initial',
                         this.value
@@ -791,7 +777,7 @@ function renderPreview(){
                 <input
                     class="preview-input"
                     value="${group.recurring}"
-                    onchange="updateGroupedPeriods(
+                    onchange="updateGroupedField(
                         '${group.zone}',
                         'recurring',
                         this.value
@@ -818,6 +804,38 @@ function renderPreview(){
     body.innerHTML = html;
 
     updateStats();
+}
+
+function updateGroupedField(zone,key,value){
+
+    exportRows.forEach(r=>{
+
+        if(r.zone === zone){
+
+            r[key] = value;
+        }
+
+    });
+
+    const row =
+        exportRows.find(r=>r.zone === zone);
+
+    if(
+        key === 'initial' ||
+        key === 'recurring'
+    ){
+
+        saveZonePeriod(
+
+            zone,
+
+            row.initial,
+
+            row.recurring
+        );
+    }
+
+    renderPreview();
 }
 
 function renderExceptions(){
@@ -863,13 +881,6 @@ function renderExceptions(){
             <td>
 
                 <button
-                    class="action-btn"
-                    onclick="editException('${zone}')"
-                >
-                    Edit
-                </button>
-
-                <button
                     class="danger action-btn"
                     onclick="deleteException('${zone}')"
                 >
@@ -882,20 +893,7 @@ function renderExceptions(){
         `;
     });
 
-    if(!html){
-
-        html = `
-        <tr>
-            <td colspan="4">
-                No matching exceptions
-            </td>
-        </tr>
-        `;
-    }
-
     body.innerHTML = html;
-
-    updateStats();
 }
 
 function toggleExceptions(){
@@ -936,20 +934,10 @@ function clearFilteredExceptions(){
 
     if(!search){
 
-        alert(
-            'Please search first'
-        );
+        alert('Search first');
 
         return;
     }
-
-    const confirmDelete = confirm(
-
-        `Delete all exceptions matching:\n\n${search} ?`
-
-    );
-
-    if(!confirmDelete) return;
 
     Object.keys(zonePeriods)
     .forEach(zone=>{
@@ -969,30 +957,6 @@ function clearFilteredExceptions(){
     renderExceptions();
 }
 
-function editException(zone){
-
-    const initial =
-        prompt(
-            'Initial Period',
-            zonePeriods[zone].initial
-        );
-
-    const recurring =
-        prompt(
-            'Recurring Period',
-            zonePeriods[zone].recurring
-        );
-
-    if(initial && recurring){
-
-        saveZonePeriod(
-            zone,
-            initial,
-            recurring
-        );
-    }
-}
-
 function deleteException(zone){
 
     delete zonePeriods[zone];
@@ -1000,46 +964,6 @@ function deleteException(zone){
     localStorage.setItem(
         'zonePeriods',
         JSON.stringify(zonePeriods)
-    );
-
-    renderExceptions();
-
-    updateStats();
-}
-
-function updateGroupedRows(zone,key,value){
-
-    exportRows.forEach(r=>{
-
-        if(r.zone === zone){
-
-            r[key] = value;
-        }
-
-    });
-}
-
-function updateGroupedPeriods(zone,key,value){
-
-    exportRows.forEach(r=>{
-
-        if(r.zone === zone){
-
-            r[key] = value;
-        }
-
-    });
-
-    const row =
-        exportRows.find(r=>r.zone === zone);
-
-    saveZonePeriod(
-
-        zone,
-
-        row.initial,
-
-        row.recurring
     );
 
     renderExceptions();
@@ -1057,24 +981,20 @@ function deleteGroupedRows(zone){
     renderPreview();
 }
 
-window.updateGroupedRows =
-    updateGroupedRows;
-
-window.updateGroupedPeriods =
-    updateGroupedPeriods;
-
 window.deleteGroupedRows =
     deleteGroupedRows;
 
-window.editException = editException;
-
-window.deleteException = deleteException;
+window.deleteException =
+    deleteException;
 
 window.toggleExceptions =
     toggleExceptions;
 
 window.clearFilteredExceptions =
     clearFilteredExceptions;
+
+window.updateGroupedField =
+    updateGroupedField;
 
 loadMasterList();
 loadTemplate();
@@ -1134,7 +1054,7 @@ document.getElementById('masterFile')
 
     updateStats();
 
-    alert('Master list loaded successfully');
+    alert('Master list loaded');
 });
 
 document.getElementById('templateFile')
@@ -1200,38 +1120,6 @@ document.getElementById('searchBox')
 
         renderMatches();
 
-        if(matchedRows.length === 1){
-
-            const zoneKey =
-                matchedRows[0]
-                .zone
-                .toLowerCase();
-
-            const saved =
-                zonePeriods[zoneKey];
-
-            if(saved){
-
-                document.getElementById(
-                    'initialPeriod'
-                ).value = saved.initial;
-
-                document.getElementById(
-                    'recurringPeriod'
-                ).value = saved.recurring;
-
-            }else{
-
-                document.getElementById(
-                    'initialPeriod'
-                ).value = 1;
-
-                document.getElementById(
-                    'recurringPeriod'
-                ).value = 1;
-            }
-        }
-
     },150);
 });
 
@@ -1254,12 +1142,6 @@ document.getElementById('addBtn')
         ).value;
 
     matchedRows.forEach(row=>{
-
-        const existingRows =
-            exportRows.filter(x=>
-
-                x.zone === row.zone
-            );
 
         const saved =
             zonePeriods[
@@ -1295,21 +1177,26 @@ document.getElementById('addBtn')
             );
         }
 
-        if(existingRows.length > 0){
+        const existingCode =
+            exportRows.find(x=>
 
-            existingRows.forEach(existing=>{
+                x.zone === row.zone &&
 
-                existing.rate = rate;
+                x.code === row.code
+            );
 
-                existing.effectiveDate =
-                    effectiveDate;
+        if(existingCode){
 
-                existing.initial =
-                    initial;
+            existingCode.rate = rate;
 
-                existing.recurring =
-                    recurring;
-            });
+            existingCode.effectiveDate =
+                effectiveDate;
+
+            existingCode.initial =
+                initial;
+
+            existingCode.recurring =
+                recurring;
 
         }else{
 
