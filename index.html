@@ -727,8 +727,21 @@ function renderPreview(){
             <td>${group.zone}</td>
 
             <td>
-                ${group.codes.join(', ')}
-            </td>
+
+    ${group.codes.slice(0,5).join(', ')}
+
+    ${
+        group.codes.length > 3
+        ?
+        `<br><span class="badge">
+            +${group.codes.length - 3}
+            more codes
+        </span>`
+        :
+        ''
+    }
+
+	</td>
 
             <td>
 
