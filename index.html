@@ -339,7 +339,7 @@ Column B = Destination
 <div class="row" style="margin-top:15px;">
 
 <div class="field">
-<button id="addBtn">Add All Matched</button>
+<button id="addBtn">Add / Update Matched</button>
 </div>
 
 <div class="field">
@@ -1255,15 +1255,11 @@ document.getElementById('addBtn')
 
     matchedRows.forEach(row=>{
 
-        const exists =
-            exportRows.find(x=>
+        const existingRows =
+            exportRows.filter(x=>
 
-                x.zone === row.zone &&
-
-                x.code === row.code
+                x.zone === row.zone
             );
-
-        if(exists) return;
 
         const saved =
             zonePeriods[
@@ -1299,20 +1295,39 @@ document.getElementById('addBtn')
             );
         }
 
-        exportRows.push({
+        if(existingRows.length > 0){
 
-            zone:row.zone,
+            existingRows.forEach(existing=>{
 
-            code:row.code,
+                existing.rate = rate;
 
-            rate,
+                existing.effectiveDate =
+                    effectiveDate;
 
-            effectiveDate,
+                existing.initial =
+                    initial;
 
-            initial,
+                existing.recurring =
+                    recurring;
+            });
 
-            recurring
-        });
+        }else{
+
+            exportRows.push({
+
+                zone:row.zone,
+
+                code:row.code,
+
+                rate,
+
+                effectiveDate,
+
+                initial,
+
+                recurring
+            });
+        }
 
     });
 
