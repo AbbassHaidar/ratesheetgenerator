@@ -516,8 +516,14 @@ function setDate(days=0){
 
     d.setDate(d.getDate()+days);
 
-    document.getElementById('effectiveDate').value =
+    const dateValue =
         d.toISOString().split('T')[0];
+
+    document.getElementById('effectiveDate').value =
+        dateValue;
+
+    document.getElementById('effectiveDate').min =
+        new Date().toISOString().split('T')[0];
 }
 
 setDate(0);
@@ -820,6 +826,21 @@ function renderPreview(){
 }
 
 function updateGroupedField(zone,key,value){
+
+    if(key === 'effectiveDate'){
+
+        const today =
+            new Date().toISOString().split('T')[0];
+
+        if(value < today){
+
+            alert('Effective date cannot be before today');
+
+            renderPreview();
+
+            return;
+        }
+    }
 
     exportRows.forEach(r=>{
 
@@ -1153,6 +1174,16 @@ document.getElementById('addBtn')
         document.getElementById(
             'effectiveDate'
         ).value;
+
+    const today =
+        new Date().toISOString().split('T')[0];
+
+    if(effectiveDate < today){
+
+        alert('Effective date cannot be before today');
+
+        return;
+    }
 
     matchedRows.forEach(row=>{
 
