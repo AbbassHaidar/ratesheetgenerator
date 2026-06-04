@@ -3,16 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>Voice Ratesheet Manager</title>
-
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
-
 <style>
 
-*{
-    box-sizing:border-box;
-}
+*{ box-sizing:border-box; }
 
 body{
     margin:0;
@@ -22,19 +17,9 @@ body{
     color:#333;
 }
 
-.container{
-    max-width:1700px;
-    margin:auto;
-}
-
-.header{
-    margin-bottom:20px;
-}
-
-.header h1{
-    margin:0;
-    color:#ff7a00;
-}
+.container{ max-width:1700px; margin:auto; }
+.header{ margin-bottom:20px; }
+.header h1{ margin:0; color:#ff7a00; }
 
 .stats{
     display:grid;
@@ -50,17 +35,8 @@ body{
     box-shadow:0 2px 8px rgba(0,0,0,0.08);
 }
 
-.stat-title{
-    font-size:13px;
-    color:#666;
-    margin-bottom:8px;
-}
-
-.stat-value{
-    font-size:28px;
-    font-weight:bold;
-    color:#ff7a00;
-}
+.stat-title{ font-size:13px; color:#666; margin-bottom:8px; }
+.stat-value{ font-size:28px; font-weight:bold; color:#ff7a00; }
 
 .layout{
     display:grid;
@@ -68,13 +44,7 @@ body{
     gap:20px;
 }
 
-@media(max-width:1200px){
-
-    .layout{
-        grid-template-columns:1fr;
-    }
-
-}
+@media(max-width:1200px){ .layout{ grid-template-columns:1fr; } }
 
 .card{
     background:white;
@@ -84,32 +54,14 @@ body{
     margin-bottom:20px;
 }
 
-.card h2{
-    margin-top:0;
-    color:#ff7a00;
-}
+.card h2{ margin-top:0; color:#ff7a00; }
 
-.row{
-    display:flex;
-    gap:15px;
-    flex-wrap:wrap;
-}
+.row{ display:flex; gap:15px; flex-wrap:wrap; }
+.field{ flex:1; min-width:220px; }
 
-.field{
-    flex:1;
-    min-width:220px;
-}
+label{ display:block; margin-bottom:6px; font-weight:bold; font-size:14px; }
 
-label{
-    display:block;
-    margin-bottom:6px;
-    font-weight:bold;
-    font-size:14px;
-}
-
-input,
-button,
-select{
+input, button, select{
     width:100%;
     padding:12px;
     border-radius:8px;
@@ -117,11 +69,7 @@ select{
     font-size:14px;
 }
 
-input:focus,
-select:focus{
-    outline:none;
-    border-color:#ff7a00;
-}
+input:focus, select:focus{ outline:none; border-color:#ff7a00; }
 
 button{
     background:#ff7a00;
@@ -129,1280 +77,1131 @@ button{
     border:none;
     cursor:pointer;
     font-weight:bold;
+    transition: background 0.2s;
 }
 
-button:hover{
-    background:#e56d00;
+button:hover{ background:#e56d00; }
+.secondary{ background:#666; }
+.secondary:hover{ background:#444; }
+.danger{ background:#cc0000; }
+.danger:hover{ background:#aa0000; }
+
+button.confirming{
+    background:#aa0000 !important;
+    animation: pulse 0.4s ease;
 }
 
-.secondary{
-    background:#666;
+@keyframes pulse{
+    0%{ transform:scale(1); }
+    50%{ transform:scale(1.05); }
+    100%{ transform:scale(1); }
 }
 
-.secondary:hover{
-    background:#444;
+.small{ font-size:12px; color:#777; margin-top:5px; }
+.status{ margin-top:8px; color:green; font-size:13px; }
+
+/* ── Match Box ─────────────────────────────────────── */
+.match-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-top:12px;
+    margin-bottom:4px;
+    flex-wrap:wrap;
+    gap:6px;
 }
 
-.danger{
-    background:#cc0000;
-}
-
-.danger:hover{
-    background:#aa0000;
-}
-
-.small{
-    font-size:12px;
-    color:#777;
-    margin-top:5px;
-}
-
-.status{
-    margin-top:8px;
-    color:green;
+.match-count{
     font-size:13px;
+    color:#666;
+    font-style:italic;
+}
+
+.match-select-all{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    font-size:13px;
+    color:#444;
+    cursor:pointer;
+    user-select:none;
+}
+
+.match-select-all input[type=checkbox]{
+    width:16px;
+    height:16px;
+    padding:0;
+    cursor:pointer;
+    accent-color:#ff7a00;
 }
 
 .match-box{
-    margin-top:15px;
     border:1px solid #ddd;
     border-radius:10px;
-    max-height:400px;
+    max-height:380px;
     overflow:auto;
     background:#fafafa;
 }
 
 .match-item{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
     padding:12px;
     border-bottom:1px solid #eee;
+    cursor:pointer;
+    transition: background 0.15s;
 }
 
-.match-item:last-child{
-    border-bottom:none;
+.match-item:last-child{ border-bottom:none; }
+
+.match-item:hover{ background:#fff3e8; }
+
+.match-item.selected{ background:#fff3e8; }
+
+.match-item input[type=checkbox]{
+    width:16px;
+    height:16px;
+    min-width:16px;
+    padding:0;
+    margin-top:2px;
+    cursor:pointer;
+    accent-color:#ff7a00;
 }
+
+.match-item-body{ flex:1; }
 
 .match-zone{
     font-weight:bold;
     margin-bottom:4px;
+    font-size:14px;
+}
+
+.match-codes{
+    font-size:12px;
+    color:#666;
 }
 
 .badge{
     display:inline-block;
-    padding:4px 8px;
+    padding:3px 8px;
     border-radius:20px;
     background:#ffe7d1;
     color:#d66500;
     font-size:11px;
-    margin-top:5px;
+    margin-left:4px;
 }
 
-table{
-    width:100%;
-    border-collapse:collapse;
-    margin-top:15px;
+.badge.already{
+    background:#e3f5eb;
+    color:#1a7a40;
 }
 
-th,td{
-    padding:12px;
+/* ── Preview Table ─────────────────────────────────── */
+table{ width:100%; border-collapse:collapse; margin-top:15px; }
+
+th, td{
+    padding:10px 12px;
     border-bottom:1px solid #eee;
     text-align:left;
     font-size:14px;
 }
 
-th{
-    background:#fafafa;
+th{ background:#fafafa; }
+
+th input[type=checkbox], td input[type=checkbox]{
+    width:16px;
+    height:16px;
+    padding:0;
+    cursor:pointer;
+    accent-color:#ff7a00;
 }
 
-.action-btn{
-    width:auto;
-    padding:8px 12px;
-    font-size:12px;
+.action-btn{ width:auto; padding:8px 12px; font-size:12px; }
+
+.highlight{ background:yellow; font-weight:bold; }
+
+.preview-input{ width:80px; padding:6px; }
+
+/* ── Bulk Edit Bar ─────────────────────────────────── */
+.bulk-bar{
+    display:none;
+    background:#fff8f0;
+    border:1px solid #ffd0a0;
+    border-radius:10px;
+    padding:12px 16px;
+    margin-top:12px;
+    align-items:flex-end;
+    gap:12px;
+    flex-wrap:wrap;
 }
 
-.highlight{
-    background:yellow;
+.bulk-bar.visible{ display:flex; }
+
+.bulk-bar .field{ min-width:140px; flex:1; }
+
+.bulk-bar label{ font-size:13px; }
+
+.bulk-bar input{ padding:8px; font-size:13px; }
+
+.bulk-bar button{ padding:10px 18px; font-size:13px; width:auto; }
+
+.bulk-bar .bulk-info{
+    font-size:13px;
+    color:#d66500;
     font-weight:bold;
+    align-self:center;
+    white-space:nowrap;
 }
 
-.preview-input{
-    width:80px;
-    padding:6px;
+/* ── Undo Bar ──────────────────────────────────────── */
+.undo-bar{
+    display:none;
+    background:#333;
+    color:white;
+    padding:10px 16px;
+    border-radius:8px;
+    margin-top:10px;
+    font-size:13px;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
 }
+
+.undo-bar.visible{ display:flex; }
+
+.undo-bar button{
+    background:#ff7a00;
+    color:white;
+    padding:6px 14px;
+    border:none;
+    border-radius:6px;
+    cursor:pointer;
+    font-size:13px;
+    width:auto;
+}
+
+/* ── Toast ─────────────────────────────────────────── */
+#toastContainer{
+    position:fixed;
+    bottom:24px;
+    right:24px;
+    z-index:9999;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+}
+
+.toast{
+    background:#333;
+    color:white;
+    padding:12px 20px;
+    border-radius:8px;
+    font-size:14px;
+    font-weight:bold;
+    box-shadow:0 4px 12px rgba(0,0,0,0.2);
+    opacity:1;
+    transition: opacity 0.4s;
+    border-left:4px solid #ff7a00;
+}
+
+.toast.success{ border-left-color:#00aa55; }
+.toast.danger{ border-left-color:#cc0000; }
+.toast.fading{ opacity:0; }
 
 </style>
 </head>
-
 <body>
+
+<div id="toastContainer"></div>
 
 <div class="container">
 
 <div class="header">
-<h1>Voice Ratesheet Manager</h1>
+    <h1>Voice Ratesheet Manager</h1>
 </div>
 
 <div class="stats">
-
-<div class="stat-card">
-<div class="stat-title">Loaded Routes</div>
-<div class="stat-value" id="routesCount">0</div>
-</div>
-
-<div class="stat-card">
-<div class="stat-title">Added Codes</div>
-<div class="stat-value" id="addedCount">0</div>
-</div>
-
-<div class="stat-card">
-<div class="stat-title">Saved Exceptions</div>
-<div class="stat-value" id="exceptionsCount">0</div>
-</div>
-
+    <div class="stat-card">
+        <div class="stat-title">Loaded Routes</div>
+        <div class="stat-value" id="routesCount">0</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-title">Added Codes</div>
+        <div class="stat-value" id="addedCount">0</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-title">Saved Exceptions</div>
+        <div class="stat-value" id="exceptionsCount">0</div>
+    </div>
 </div>
 
 <div class="layout">
 
+<!-- LEFT COLUMN -->
 <div>
 
-<div class="card">
-
-<h2>Files</h2>
-
-<div class="row">
-
-<div class="field">
-<label>Master Code List</label>
-<input type="file" id="masterFile" accept=".xlsx,.xls,.csv">
-<div class="small">
-Column A = Code<br>
-Column B = Destination
-</div>
-</div>
-
-<div class="field">
-<label>Export Template</label>
-<input type="file" id="templateFile" accept=".xlsx,.xls">
-<div class="status" id="templateStatus"></div>
-</div>
-
-</div>
-
-</div>
-
-<div class="card">
-
-<h2>Add Routes</h2>
-
-<div class="row">
-
-<div class="field">
-<label>Search</label>
-<input type="text" id="searchBox" placeholder="sudan mobile zain">
-</div>
-
-<div class="field">
-<label>Rate</label>
-<input type="number" step="0.000001" id="rate">
-</div>
-
-<div class="field">
-<label>Effective Date</label>
-<input type="date" id="effectiveDate">
-</div>
-
-</div>
-
-<div class="row" style="margin-top:15px;">
-
-<div class="field">
-<label>Quick Date</label>
-<select id="quickDate">
-<option value="0">Today</option>
-<option value="1">Tomorrow</option>
-<option value="7">+7 Days</option>
-</select>
-</div>
-
-<div class="field">
-<label>Initial</label>
-<input type="number" id="initialPeriod" value="1">
-</div>
-
-<div class="field">
-<label>Recurring</label>
-<input type="number" id="recurringPeriod" value="1">
-</div>
-
-</div>
-
-<div class="match-box" id="matchBox"></div>
-
-<div class="row" style="margin-top:15px;">
-
-<div class="field">
-<button id="addBtn">Add / Update Matched</button>
-</div>
-
-<div class="field">
-<button class="secondary" id="clearMatchesBtn">
-Clear Matches
-</button>
-</div>
-
-</div>
-
-</div>
-
-</div>
-
-<div>
-
-<div class="card">
-
-<h2>Preview</h2>
-
-<table>
-
-<thead>
-<tr>
-<th>Destination</th>
-<th>Codes Preview</th>
-<th>Rate</th>
-<th>Date</th>
-<th>Init</th>
-<th>Rec</th>
-<th>Delete</th>
-</tr>
-</thead>
-
-<tbody id="previewBody"></tbody>
-
-</table>
-
-<div class="row" style="margin-top:15px;">
-
-<div class="field">
-<label>Export File Name</label>
-
-<input
-    type="text"
-    id="exportFileName"
-    placeholder="Ratesheet"
->
-
-</div>
-
-<div class="field">
-<button id="exportBtn">Generate XLSX</button>
-</div>
-
-<div class="field">
-<button class="danger" id="clearAllBtn">
-Clear All
-</button>
-</div>
-
-</div>
-
-</div>
-
-<div class="card">
-
-<div
-    style="
-        display:flex;
-        justify-content:space-between;
-        align-items:center;
-        cursor:pointer;
-    "
-    onclick="toggleExceptions()"
->
-
-    <h2 style="margin:0;">
-        Period Exceptions
-    </h2>
-
-    <button
-        type="button"
-        class="secondary action-btn"
-        id="exceptionsToggleBtn"
-    >
-        Expand
-    </button>
-
-</div>
-
-<div
-    id="exceptionsContainer"
-    style="display:none; margin-top:20px;"
->
-
-    <div class="row">
-
-        <div class="field">
-
-            <label>Search Exceptions</label>
-
-            <input
-                type="text"
-                id="exceptionsSearch"
-                placeholder="latvia, sudan, zain..."
-            >
-
+    <div class="card">
+        <h2>Files</h2>
+        <div class="row">
+            <div class="field">
+                <label>Master Code List</label>
+                <input type="file" id="masterFile" accept=".xlsx,.xls,.csv">
+                <div class="small">Column A = Code<br>Column B = Destination</div>
+            </div>
+            <div class="field">
+                <label>Export Template</label>
+                <input type="file" id="templateFile" accept=".xlsx,.xls">
+                <div class="status" id="templateStatus"></div>
+            </div>
         </div>
-
-        <div class="field">
-
-            <label>&nbsp;</label>
-
-            <button
-                class="danger"
-                onclick="clearFilteredExceptions()"
-            >
-                Delete Filtered Exceptions
-            </button>
-
-        </div>
-
     </div>
 
-    <table>
+    <div class="card">
+        <h2>Add Routes</h2>
+        <div class="row">
+            <div class="field">
+                <label>Search</label>
+                <input type="text" id="searchBox" placeholder="sudan mobile zain">
+            </div>
+            <div class="field">
+                <label>Rate</label>
+                <input type="number" step="0.000001" id="rate">
+            </div>
+            <div class="field">
+                <label>Effective Date</label>
+                <input type="date" id="effectiveDate">
+            </div>
+        </div>
+        <div class="row" style="margin-top:15px;">
+            <div class="field">
+                <label>Quick Date</label>
+                <select id="quickDate">
+                    <option value="0">Today</option>
+                    <option value="1">Tomorrow</option>
+                    <option value="7">+7 Days</option>
+                </select>
+            </div>
+            <div class="field">
+                <label>Initial</label>
+                <input type="number" id="initialPeriod" value="1">
+            </div>
+            <div class="field">
+                <label>Recurring</label>
+                <input type="number" id="recurringPeriod" value="1">
+            </div>
+        </div>
 
-        <thead>
-        <tr>
-            <th>Zone</th>
-            <th>Initial</th>
-            <th>Recurring</th>
-            <th>Actions</th>
-        </tr>
-        </thead>
+        <!-- Match header: count + select all -->
+        <div class="match-header" id="matchHeader" style="display:none;">
+            <div class="match-count" id="matchCount"></div>
+            <label class="match-select-all">
+                <input type="checkbox" id="selectAllMatches">
+                Select All
+            </label>
+        </div>
 
-        <tbody id="exceptionsBody"></tbody>
+        <div class="match-box" id="matchBox"></div>
 
-    </table>
+        <div class="row" style="margin-top:15px;">
+            <div class="field">
+                <button id="addBtn">Add / Update Selected</button>
+            </div>
+            <div class="field">
+                <button class="secondary" id="clearMatchesBtn">Clear Matches</button>
+            </div>
+        </div>
+    </div>
 
 </div>
 
-</div>
+<!-- RIGHT COLUMN -->
+<div>
+
+    <div class="card">
+        <h2>Preview</h2>
+
+        <!-- Bulk edit bar -->
+        <div class="bulk-bar" id="bulkBar">
+            <div class="bulk-info" id="bulkInfo">0 selected</div>
+            <div class="field">
+                <label>Bulk Rate</label>
+                <input type="number" step="0.000001" id="bulkRate" placeholder="leave blank to skip">
+            </div>
+            <div class="field">
+                <label>Bulk Date</label>
+                <input type="date" id="bulkDate">
+            </div>
+            <button id="applyBulkBtn">Apply to Selected</button>
+            <button class="danger action-btn" id="deleteSelectedBtn">Delete Selected</button>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th><input type="checkbox" id="selectAllPreview" title="Select All"></th>
+                    <th>Destination</th>
+                    <th>Codes</th>
+                    <th>Rate</th>
+                    <th>Date</th>
+                    <th>Init</th>
+                    <th>Rec</th>
+                    <th>Delete</th>
+                </tr>
+            </thead>
+            <tbody id="previewBody"></tbody>
+        </table>
+
+        <!-- Undo bar -->
+        <div class="undo-bar" id="undoBar">
+            <span id="undoMessage">Last action can be undone</span>
+            <button id="undoBtn">↩ Undo</button>
+        </div>
+
+        <div class="row" style="margin-top:15px;">
+            <div class="field">
+                <label>Export File Name</label>
+                <input type="text" id="exportFileName" placeholder="Ratesheet">
+            </div>
+            <div class="field">
+                <button id="exportBtn">Generate XLSX</button>
+            </div>
+            <div class="field">
+                <button class="danger" id="clearAllBtn">Clear All</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;" onclick="toggleExceptions()">
+            <h2 style="margin:0;">Period Exceptions</h2>
+            <button type="button" class="secondary action-btn" id="exceptionsToggleBtn">Expand</button>
+        </div>
+
+        <div id="exceptionsContainer" style="display:none; margin-top:20px;">
+            <div class="row">
+                <div class="field">
+                    <label>Search Exceptions</label>
+                    <input type="text" id="exceptionsSearch" placeholder="latvia, sudan, zain...">
+                </div>
+                <div class="field">
+                    <label>&nbsp;</label>
+                    <button class="danger" id="deleteFilteredBtn">Delete Filtered Exceptions</button>
+                </div>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Zone</th>
+                        <th>Initial</th>
+                        <th>Recurring</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="exceptionsBody"></tbody>
+            </table>
+        </div>
+    </div>
 
 </div>
-
 </div>
-
 </div>
 
 <script>
 
-let masterData = [];
-let matchedRows = [];
-let exportRows = [];
+let masterData    = [];
+let matchedGroups = [];   // grouped by destination: [{zone, codes:[]}]
+let exportRows    = [];
 let templateWorkbook = null;
-let zonePeriods = {};
+let zonePeriods   = {};
 
-function updateStats(){
+// ─── Snapshot / Undo ────────────────────────────────────────────────
+let lastSnapshot = null;
+let undoTimer    = null;
 
-    document.getElementById('routesCount').innerText =
-        masterData.length;
-
-    document.getElementById('addedCount').innerText =
-        exportRows.length;
-
-    document.getElementById('exceptionsCount').innerText =
-        Object.keys(zonePeriods).length;
+function takeSnapshot(label) {
+    lastSnapshot = { rows: JSON.parse(JSON.stringify(exportRows)), label };
+    const bar = document.getElementById('undoBar');
+    document.getElementById('undoMessage').innerText = `"${label}" can be undone`;
+    bar.classList.add('visible');
+    clearTimeout(undoTimer);
+    undoTimer = setTimeout(() => {
+        bar.classList.remove('visible');
+        lastSnapshot = null;
+    }, 8000);
 }
 
-function setDate(days=0){
+function hideUndoBar() {
+    document.getElementById('undoBar').classList.remove('visible');
+    clearTimeout(undoTimer);
+    lastSnapshot = null;
+}
 
+document.getElementById('undoBtn').addEventListener('click', function() {
+    if (!lastSnapshot) return;
+    exportRows = lastSnapshot.rows;
+    hideUndoBar();
+    renderPreview();
+    showToast('Undone ↩', 'success');
+});
+
+// ─── Toast ───────────────────────────────────────────────────────────
+function showToast(msg, type) {
+    const container = document.getElementById('toastContainer');
+    const t = document.createElement('div');
+    t.className = 'toast' + (type ? ' ' + type : '');
+    t.innerText = msg;
+    container.appendChild(t);
+    setTimeout(() => {
+        t.classList.add('fading');
+        setTimeout(() => t.remove(), 400);
+    }, 2500);
+}
+
+// ─── Confirm on second click ─────────────────────────────────────────
+function confirmAction(btn, action) {
+    if (btn.dataset.confirming === 'true') {
+        action();
+        btn.dataset.confirming = 'false';
+        btn.innerText = btn.dataset.originalText;
+        btn.classList.remove('confirming');
+        clearTimeout(btn._confirmTimer);
+        return;
+    }
+    btn.dataset.originalText = btn.innerText;
+    btn.dataset.confirming = 'true';
+    btn.innerText = 'Sure? (click again)';
+    btn.classList.add('confirming');
+    btn._confirmTimer = setTimeout(() => {
+        btn.dataset.confirming = 'false';
+        btn.innerText = btn.dataset.originalText;
+        btn.classList.remove('confirming');
+    }, 3000);
+}
+
+// ─── Stats ────────────────────────────────────────────────────────────
+function updateStats() {
+    document.getElementById('routesCount').innerText  = masterData.length;
+    document.getElementById('addedCount').innerText   = exportRows.length;
+    document.getElementById('exceptionsCount').innerText = Object.keys(zonePeriods).length;
+}
+
+// ─── Date helpers ─────────────────────────────────────────────────────
+function setDate(days = 0) {
     const d = new Date();
-
-    d.setDate(d.getDate()+days);
-
-    const dateValue =
-        d.toISOString().split('T')[0];
-
-    document.getElementById('effectiveDate').value =
-        dateValue;
-
-    document.getElementById('effectiveDate').min =
-        new Date().toISOString().split('T')[0];
+    d.setDate(d.getDate() + days);
+    const v = d.toISOString().split('T')[0];
+    document.getElementById('effectiveDate').value = v;
+    document.getElementById('effectiveDate').min   = new Date().toISOString().split('T')[0];
 }
 
 setDate(0);
 
-function formatDate(dateString){
-
-    const d = new Date(dateString);
-
-    const mm = String(d.getMonth()+1).padStart(2,'0');
-
-    const dd = String(d.getDate()).padStart(2,'0');
-
-    const yyyy = d.getFullYear();
-
+function formatDate(dateString) {
+    const [yyyy, mm, dd] = dateString.split('-');
     return `${mm}/${dd}/${yyyy} 00:00`;
 }
 
-function saveMasterList(data){
+// ─── Persistence ──────────────────────────────────────────────────────
+function saveMasterList(data) { localStorage.setItem('masterData', JSON.stringify(data)); }
 
-    localStorage.setItem(
-        'masterData',
-        JSON.stringify(data)
-    );
-}
-
-function loadMasterList(){
-
+function loadMasterList() {
     const data = localStorage.getItem('masterData');
-
-    if(data){
-
-        masterData = JSON.parse(data);
-    }
-
+    if (data) masterData = JSON.parse(data);
     updateStats();
 }
 
-function saveTemplate(data,name){
-
-    const binary = Array.from(new Uint8Array(data));
-
-    localStorage.setItem(
-        'templateData',
-        JSON.stringify(binary)
-    );
-
-    localStorage.setItem(
-        'templateName',
-        name
-    );
+function saveTemplate(data, name) {
+    localStorage.setItem('templateData', JSON.stringify(Array.from(new Uint8Array(data))));
+    localStorage.setItem('templateName', name);
 }
 
-function loadTemplate(){
-
+function loadTemplate() {
     const data = localStorage.getItem('templateData');
-
-    if(!data) return;
-
-    const uint = new Uint8Array(JSON.parse(data));
-
-    templateWorkbook = XLSX.read(uint,{type:'array'});
-
-    document.getElementById('templateStatus').innerText =
-        'Loaded: ' +
-        localStorage.getItem('templateName');
+    if (!data) return;
+    templateWorkbook = XLSX.read(new Uint8Array(JSON.parse(data)), { type: 'array' });
+    document.getElementById('templateStatus').innerText = 'Loaded: ' + localStorage.getItem('templateName');
 }
 
-function loadZonePeriods(){
-
+function loadZonePeriods() {
     const data = localStorage.getItem('zonePeriods');
-
-    if(data){
-
-        zonePeriods = JSON.parse(data);
-    }
-
+    if (data) zonePeriods = JSON.parse(data);
     renderExceptions();
-
     updateStats();
 }
 
-function saveZonePeriod(zone,initial,recurring){
-
-    if(
-        Number(initial) === 1 &&
-        Number(recurring) === 1
-    ){
-
+function saveZonePeriod(zone, initial, recurring) {
+    if (Number(initial) === 1 && Number(recurring) === 1) {
         delete zonePeriods[zone.toLowerCase()];
-
-    }else{
-
-        zonePeriods[zone.toLowerCase()] = {
-
-            initial,
-            recurring
-        };
+    } else {
+        zonePeriods[zone.toLowerCase()] = { initial, recurring };
     }
-
-    localStorage.setItem(
-        'zonePeriods',
-        JSON.stringify(zonePeriods)
-    );
-
+    localStorage.setItem('zonePeriods', JSON.stringify(zonePeriods));
     renderExceptions();
-
     updateStats();
 }
 
-function renderMatches(){
+// ─── Get selected match zones ─────────────────────────────────────────
+function getSelectedMatchZones() {
+    return Array.from(
+        document.querySelectorAll('.match-checkbox:checked')
+    ).map(cb => cb.dataset.zone);
+}
 
-    const box =
-        document.getElementById('matchBox');
+// ─── Render: Matches (grouped by destination) ─────────────────────────
+function renderMatches() {
+    const box       = document.getElementById('matchBox');
+    const header    = document.getElementById('matchHeader');
+    const countEl   = document.getElementById('matchCount');
+    const selectAll = document.getElementById('selectAllMatches');
 
-    if(matchedRows.length === 0){
-
-        box.innerHTML =
-            '<div class="match-item">No matches</div>';
-
+    if (matchedGroups.length === 0) {
+        box.innerHTML = '<div class="match-item" style="cursor:default;">No matches</div>';
+        header.style.display = 'none';
         return;
     }
 
-    const searchValue =
-        document.getElementById('searchBox')
-        .value
-        .toLowerCase();
+    header.style.display = 'flex';
 
-    const tokens =
-        searchValue
-        .split(' ')
-        .filter(t=>t);
+    const totalCodes = matchedGroups.reduce((s, g) => s + g.codes.length, 0);
+    const destCount  = matchedGroups.length;
+    countEl.innerText = `${destCount} destination${destCount !== 1 ? 's' : ''} · ${totalCodes} code${totalCodes !== 1 ? 's' : ''}`;
+
+    const searchValue = document.getElementById('searchBox').value.toLowerCase();
+    const tokens      = searchValue.split(' ').filter(t => t);
+
+    // Already-added zones
+    const addedZones = new Set(exportRows.map(r => r.zone));
 
     let html = '';
-
-    matchedRows.slice(0,500).forEach(row=>{
-
-        let zoneDisplay = row.zone;
-
-        tokens.forEach(token=>{
-
-            const regex =
-                new RegExp(`(${token})`,'ig');
-
-            zoneDisplay =
-                zoneDisplay.replace(
-                    regex,
-                    '<span class="highlight">$1</span>'
-                );
+    matchedGroups.forEach((group, i) => {
+        let zoneDisplay = group.zone;
+        tokens.forEach(token => {
+            const regex = new RegExp(`(${token})`, 'ig');
+            zoneDisplay = zoneDisplay.replace(regex, '<span class="highlight">$1</span>');
         });
 
+        const isAdded = addedZones.has(group.zone);
+        const codePreview = group.codes.slice(0, 4).join(', ')
+            + (group.codes.length > 4 ? ` <span class="badge">+${group.codes.length - 4} more</span>` : '');
+
+        const alreadyBadge = isAdded
+            ? `<span class="badge already">✓ already added</span>`
+            : '';
+
         html += `
-        <div class="match-item">
-
-            <div class="match-zone">
-                ${zoneDisplay}
+        <div class="match-item" data-idx="${i}">
+            <input type="checkbox" class="match-checkbox" data-zone="${group.zone}" data-idx="${i}">
+            <div class="match-item-body">
+                <div class="match-zone">${zoneDisplay} ${alreadyBadge}</div>
+                <div class="match-codes">${codePreview}</div>
             </div>
-
-            <div>
-                Code: ${row.code}
-            </div>
-
-        </div>
-        `;
+        </div>`;
     });
 
     box.innerHTML = html;
-}
 
-function renderPreview(){
-
-    const body =
-        document.getElementById('previewBody');
-
-    let grouped = {};
-
-    exportRows.forEach(r=>{
-
-        if(!grouped[r.zone]){
-
-            grouped[r.zone] = {
-
-                zone:r.zone,
-
-                codes:[],
-
-                rate:r.rate,
-
-                effectiveDate:r.effectiveDate,
-
-                initial:r.initial,
-
-                recurring:r.recurring
-            };
-        }
-
-        grouped[r.zone].codes.push(r.code);
-
+    // Clicking anywhere on the row toggles checkbox
+    box.querySelectorAll('.match-item').forEach(item => {
+        item.addEventListener('click', function(e) {
+            if (e.target.type === 'checkbox') return;
+            const cb = this.querySelector('.match-checkbox');
+            cb.checked = !cb.checked;
+            this.classList.toggle('selected', cb.checked);
+            updateSelectAllState();
+            updateMatchCount();
+        });
     });
 
-    let html = '';
+    box.querySelectorAll('.match-checkbox').forEach(cb => {
+        cb.addEventListener('change', function() {
+            this.closest('.match-item').classList.toggle('selected', this.checked);
+            updateSelectAllState();
+            updateMatchCount();
+        });
+    });
 
-    Object.values(grouped).forEach(group=>{
+    // Restore select-all state
+    selectAll.checked = false;
+    selectAll.indeterminate = false;
+}
+
+function updateSelectAllState() {
+    const all      = document.querySelectorAll('.match-checkbox');
+    const checked  = document.querySelectorAll('.match-checkbox:checked');
+    const selectAll = document.getElementById('selectAllMatches');
+    if (checked.length === 0) {
+        selectAll.checked = false;
+        selectAll.indeterminate = false;
+    } else if (checked.length === all.length) {
+        selectAll.checked = true;
+        selectAll.indeterminate = false;
+    } else {
+        selectAll.checked = false;
+        selectAll.indeterminate = true;
+    }
+}
+
+function updateMatchCount() {
+    const total    = matchedGroups.length;
+    const selected = document.querySelectorAll('.match-checkbox:checked').length;
+    const totalCodes = matchedGroups.reduce((s, g) => s + g.codes.length, 0);
+
+    let text = `${total} destination${total !== 1 ? 's' : ''} · ${totalCodes} code${totalCodes !== 1 ? 's' : ''}`;
+    if (selected > 0) {
+        const selCodes = matchedGroups
+            .filter(g => getSelectedMatchZones().includes(g.zone))
+            .reduce((s, g) => s + g.codes.length, 0);
+        text += ` — ${selected} selected · ${selCodes} codes`;
+    }
+    document.getElementById('matchCount').innerText = text;
+}
+
+// Select All checkbox in match box
+document.getElementById('selectAllMatches').addEventListener('change', function() {
+    document.querySelectorAll('.match-checkbox').forEach(cb => {
+        cb.checked = this.checked;
+        cb.closest('.match-item').classList.toggle('selected', this.checked);
+    });
+    updateMatchCount();
+});
+
+// ─── Render: Preview ──────────────────────────────────────────────────
+function getPreviewGroups() {
+    let grouped = {};
+    exportRows.forEach(r => {
+        if (!grouped[r.zone]) {
+            grouped[r.zone] = { zone: r.zone, codes: [], rate: r.rate, effectiveDate: r.effectiveDate, initial: r.initial, recurring: r.recurring };
+        }
+        grouped[r.zone].codes.push(r.code);
+    });
+    return Object.values(grouped);
+}
+
+function renderPreview() {
+    const body = document.getElementById('previewBody');
+    const groups = getPreviewGroups();
+
+    let html = '';
+    groups.forEach(group => {
+        const codePreview = group.codes.slice(0, 3).join(', ')
+            + (group.codes.length > 3 ? ` <span class="badge">+${group.codes.length - 3} more</span>` : '');
 
         html += `
         <tr>
-
+            <td><input type="checkbox" class="preview-checkbox" data-zone="${group.zone}"></td>
             <td>${group.zone}</td>
-
+            <td>${codePreview}</td>
             <td>
-
-    ${group.codes.slice(0,3).join(', ')}
-
-    ${
-        group.codes.length > 3
-        ?
-        `<br><span class="badge">
-            +${group.codes.length - 3}
-            more codes
-        </span>`
-        :
-        ''
-    }
-
-	</td>
-
-            <td>
-
-                <input
-                    class="preview-input"
-                    value="${group.rate}"
-                    onchange="updateGroupedField(
-                        '${group.zone}',
-                        'rate',
-                        this.value
-                    )"
-                >
-
+                <input class="preview-input" value="${group.rate}"
+                    data-zone="${group.zone}" data-field="rate">
             </td>
-
             <td>
-
-                <input
-                    type="date"
-                    value="${group.effectiveDate}"
-                    onchange="updateGroupedField(
-                        '${group.zone}',
-                        'effectiveDate',
-                        this.value
-                    )"
-                >
-
+                <input type="date" value="${group.effectiveDate}"
+                    data-zone="${group.zone}" data-field="effectiveDate">
             </td>
-
             <td>
-
-                <input
-                    class="preview-input"
-                    value="${group.initial}"
-                    onchange="updateGroupedField(
-                        '${group.zone}',
-                        'initial',
-                        this.value
-                    )"
-                >
-
+                <input class="preview-input" value="${group.initial}"
+                    data-zone="${group.zone}" data-field="initial">
             </td>
-
             <td>
-
-                <input
-                    class="preview-input"
-                    value="${group.recurring}"
-                    onchange="updateGroupedField(
-                        '${group.zone}',
-                        'recurring',
-                        this.value
-                    )"
-                >
-
+                <input class="preview-input" value="${group.recurring}"
+                    data-zone="${group.zone}" data-field="recurring">
             </td>
-
             <td>
-
-                <button
-                    class="danger action-btn"
-                    onclick="deleteGroupedRows('${group.zone}')"
-                >
-                    Delete
-                </button>
-
+                <button class="danger action-btn delete-row-btn" data-zone="${group.zone}">Delete</button>
             </td>
-
-        </tr>
-        `;
+        </tr>`;
     });
 
     body.innerHTML = html;
 
+    // Checkbox listeners → update bulk bar
+    body.querySelectorAll('.preview-checkbox').forEach(cb => {
+        cb.addEventListener('change', updateBulkBar);
+    });
+
+    // Select All preview
+    document.getElementById('selectAllPreview').checked = false;
+    document.getElementById('selectAllPreview').indeterminate = false;
+
     updateStats();
+    updateBulkBar();
 }
 
-function updateGroupedField(zone,key,value){
+function getSelectedPreviewZones() {
+    return Array.from(
+        document.querySelectorAll('.preview-checkbox:checked')
+    ).map(cb => cb.dataset.zone);
+}
 
-    if(key === 'effectiveDate'){
+// ─── Bulk Bar ─────────────────────────────────────────────────────────
+function updateBulkBar() {
+    const selected = getSelectedPreviewZones();
+    const bar = document.getElementById('bulkBar');
+    const info = document.getElementById('bulkInfo');
+    if (selected.length > 0) {
+        bar.classList.add('visible');
+        info.innerText = `${selected.length} destination${selected.length !== 1 ? 's' : ''} selected`;
+    } else {
+        bar.classList.remove('visible');
+    }
 
-        const today =
-            new Date().toISOString().split('T')[0];
+    // Update select-all-preview state
+    const all     = document.querySelectorAll('.preview-checkbox');
+    const checked = document.querySelectorAll('.preview-checkbox:checked');
+    const saEl    = document.getElementById('selectAllPreview');
+    if (all.length === 0) {
+        saEl.checked = false; saEl.indeterminate = false;
+    } else if (checked.length === all.length) {
+        saEl.checked = true; saEl.indeterminate = false;
+    } else if (checked.length === 0) {
+        saEl.checked = false; saEl.indeterminate = false;
+    } else {
+        saEl.checked = false; saEl.indeterminate = true;
+    }
+}
 
-        if(value < today){
+// Select All preview
+document.getElementById('selectAllPreview').addEventListener('change', function() {
+    document.querySelectorAll('.preview-checkbox').forEach(cb => {
+        cb.checked = this.checked;
+    });
+    updateBulkBar();
+});
 
-            alert('Effective date cannot be before today');
+// Apply Bulk
+document.getElementById('applyBulkBtn').addEventListener('click', function() {
+    const zones    = getSelectedPreviewZones();
+    if (zones.length === 0) { showToast('No rows selected', 'danger'); return; }
 
+    const bulkRate = document.getElementById('bulkRate').value.trim();
+    const bulkDate = document.getElementById('bulkDate').value;
+
+    if (!bulkRate && !bulkDate) {
+        showToast('Enter a rate or date to apply', 'danger');
+        return;
+    }
+
+    if (bulkDate) {
+        const today = new Date().toISOString().split('T')[0];
+        if (bulkDate < today) { showToast('Effective date cannot be before today', 'danger'); return; }
+    }
+
+    takeSnapshot(`Bulk edit ${zones.length} destinations`);
+
+    exportRows.forEach(r => {
+        if (zones.includes(r.zone)) {
+            if (bulkRate) r.rate = bulkRate;
+            if (bulkDate) r.effectiveDate = bulkDate;
+        }
+    });
+
+    document.getElementById('bulkRate').value = '';
+    document.getElementById('bulkDate').value = '';
+
+    renderPreview();
+    showToast(`Applied to ${zones.length} destination${zones.length !== 1 ? 's' : ''} ✓`, 'success');
+});
+
+// Delete Selected
+document.getElementById('deleteSelectedBtn').addEventListener('click', function() {
+    const zones = getSelectedPreviewZones();
+    if (zones.length === 0) { showToast('No rows selected', 'danger'); return; }
+    confirmAction(this, () => {
+        takeSnapshot(`Delete ${zones.length} destinations`);
+        exportRows = exportRows.filter(r => !zones.includes(r.zone));
+        renderPreview();
+        showToast(`Deleted ${zones.length} destination${zones.length !== 1 ? 's' : ''}`, 'danger');
+    });
+});
+
+// ─── Render: Exceptions ───────────────────────────────────────────────
+function renderExceptions() {
+    const body   = document.getElementById('exceptionsBody');
+    const search = (document.getElementById('exceptionsSearch')?.value || '').toLowerCase().trim();
+    let html = '';
+    Object.keys(zonePeriods).sort().forEach(zone => {
+        if (search && !zone.includes(search)) return;
+        const p = zonePeriods[zone];
+        html += `
+        <tr>
+            <td>${zone}</td>
+            <td>${p.initial}</td>
+            <td>${p.recurring}</td>
+            <td>
+                <button class="danger action-btn delete-exception-btn" data-zone="${zone}">Delete</button>
+            </td>
+        </tr>`;
+    });
+    body.innerHTML = html;
+}
+
+// ─── Event Delegation: Preview Table ─────────────────────────────────
+document.getElementById('previewBody').addEventListener('change', function(e) {
+    const input = e.target.closest('input[data-zone][data-field]');
+    if (!input) return;
+    const zone  = input.dataset.zone;
+    const field = input.dataset.field;
+    const value = input.value;
+
+    if (field === 'effectiveDate') {
+        const today = new Date().toISOString().split('T')[0];
+        if (value < today) {
+            showToast('Effective date cannot be before today', 'danger');
             renderPreview();
-
             return;
         }
     }
 
-    exportRows.forEach(r=>{
+    exportRows.forEach(r => { if (r.zone === zone) r[field] = value; });
 
-        if(r.zone === zone){
-
-            r[key] = value;
-        }
-
-    });
-
-    const row =
-        exportRows.find(r=>r.zone === zone);
-
-    if(
-        key === 'initial' ||
-        key === 'recurring'
-    ){
-
-        saveZonePeriod(
-
-            zone,
-
-            row.initial,
-
-            row.recurring
-        );
+    if (field === 'initial' || field === 'recurring') {
+        const row = exportRows.find(r => r.zone === zone);
+        saveZonePeriod(zone, row.initial, row.recurring);
     }
 
     renderPreview();
-}
+});
 
-function renderExceptions(){
-
-    const body =
-        document.getElementById('exceptionsBody');
-
-    const search =
-        (
-            document.getElementById(
-                'exceptionsSearch'
-            )?.value || ''
-        )
-        .toLowerCase()
-        .trim();
-
-    let html = '';
-
-    Object.keys(zonePeriods)
-
-    .sort()
-
-    .forEach(zone=>{
-
-        if(
-            search &&
-            !zone.includes(search)
-        ){
-            return;
-        }
-
-        const p = zonePeriods[zone];
-
-        html += `
-        <tr>
-
-            <td>${zone}</td>
-
-            <td>${p.initial}</td>
-
-            <td>${p.recurring}</td>
-
-            <td>
-
-                <button
-                    class="danger action-btn"
-                    onclick="deleteException('${zone}')"
-                >
-                    Delete
-                </button>
-
-            </td>
-
-        </tr>
-        `;
+document.getElementById('previewBody').addEventListener('click', function(e) {
+    const btn = e.target.closest('.delete-row-btn');
+    if (!btn) return;
+    confirmAction(btn, () => {
+        const zone = btn.dataset.zone;
+        takeSnapshot(`Delete "${zone}"`);
+        exportRows = exportRows.filter(r => r.zone !== zone);
+        renderPreview();
+        showToast(`Deleted "${zone}"`, 'danger');
     });
+});
 
-    body.innerHTML = html;
-}
+// ─── Event Delegation: Exceptions Table ──────────────────────────────
+document.getElementById('exceptionsBody').addEventListener('click', function(e) {
+    const btn = e.target.closest('.delete-exception-btn');
+    if (!btn) return;
+    confirmAction(btn, () => {
+        const zone = btn.dataset.zone;
+        delete zonePeriods[zone];
+        localStorage.setItem('zonePeriods', JSON.stringify(zonePeriods));
+        renderExceptions();
+        updateStats();
+        showToast(`Exception "${zone}" deleted`, 'danger');
+    });
+});
 
-function toggleExceptions(){
-
-    const container =
-        document.getElementById(
-            'exceptionsContainer'
-        );
-
-    const btn =
-        document.getElementById(
-            'exceptionsToggleBtn'
-        );
-
-    if(container.style.display === 'none'){
-
+// ─── Toggle Exceptions ────────────────────────────────────────────────
+function toggleExceptions() {
+    const container = document.getElementById('exceptionsContainer');
+    const btn       = document.getElementById('exceptionsToggleBtn');
+    if (container.style.display === 'none') {
         container.style.display = 'block';
-
         btn.innerText = 'Collapse';
-
-    }else{
-
+    } else {
         container.style.display = 'none';
-
         btn.innerText = 'Expand';
     }
 }
 
-function clearFilteredExceptions(){
-
-    const search =
-        document.getElementById(
-            'exceptionsSearch'
-        )
-        .value
-        .toLowerCase()
-        .trim();
-
-    if(!search){
-
-        alert('Search first');
-
-        return;
-    }
-
-    Object.keys(zonePeriods)
-    .forEach(zone=>{
-
-        if(zone.includes(search)){
-
-            delete zonePeriods[zone];
-        }
-
+// ─── Delete Filtered Exceptions ───────────────────────────────────────
+document.getElementById('deleteFilteredBtn').addEventListener('click', function() {
+    const search = document.getElementById('exceptionsSearch').value.toLowerCase().trim();
+    if (!search) { showToast('Please search first', 'danger'); return; }
+    const matches = Object.keys(zonePeriods).filter(z => z.includes(search));
+    if (matches.length === 0) { showToast('No matches to delete'); return; }
+    confirmAction(this, () => {
+        matches.forEach(zone => delete zonePeriods[zone]);
+        localStorage.setItem('zonePeriods', JSON.stringify(zonePeriods));
+        renderExceptions();
+        updateStats();
+        showToast(`Deleted ${matches.length} exception(s)`, 'danger');
     });
+});
 
-    localStorage.setItem(
-        'zonePeriods',
-        JSON.stringify(zonePeriods)
-    );
-
-    renderExceptions();
-}
-
-function deleteException(zone){
-
-    delete zonePeriods[zone];
-
-    localStorage.setItem(
-        'zonePeriods',
-        JSON.stringify(zonePeriods)
-    );
-
-    renderExceptions();
-}
-
-function deleteGroupedRows(zone){
-
-    exportRows =
-        exportRows.filter(r=>
-
-            r.zone !== zone
-
-        );
-
-    renderPreview();
-}
-
-window.deleteGroupedRows =
-    deleteGroupedRows;
-
-window.deleteException =
-    deleteException;
-
-window.toggleExceptions =
-    toggleExceptions;
-
-window.clearFilteredExceptions =
-    clearFilteredExceptions;
-
-window.updateGroupedField =
-    updateGroupedField;
-
-loadMasterList();
-loadTemplate();
-loadZonePeriods();
-
-document.getElementById('quickDate')
-.addEventListener('change',function(){
-
+// ─── Quick Date ───────────────────────────────────────────────────────
+document.getElementById('quickDate').addEventListener('change', function() {
     setDate(parseInt(this.value));
 });
 
-document.getElementById('exceptionsSearch')
-?.addEventListener('input',function(){
-
+// ─── Exceptions Search ────────────────────────────────────────────────
+document.getElementById('exceptionsSearch')?.addEventListener('input', function() {
     renderExceptions();
 });
 
-document.getElementById('masterFile')
-.addEventListener('change',async function(e){
-
+// ─── Load Master File ─────────────────────────────────────────────────
+document.getElementById('masterFile').addEventListener('change', async function(e) {
     const file = e.target.files[0];
-
-    if(!file) return;
-
-    const data = await file.arrayBuffer();
-
+    if (!file) return;
+    const data     = await file.arrayBuffer();
     const workbook = XLSX.read(data);
-
-    const sheet =
-        workbook.Sheets[
-            workbook.SheetNames[0]
-        ];
-
-    const raw =
-        XLSX.utils.sheet_to_json(sheet,{
-            header:1
-        });
-
+    const sheet    = workbook.Sheets[workbook.SheetNames[0]];
+    const raw      = XLSX.utils.sheet_to_json(sheet, { header: 1 });
     masterData = [];
-
-    raw.forEach((row,index)=>{
-
-        if(index === 0) return;
-
-        if(!row[0] || !row[1]) return;
-
-        masterData.push({
-
-            code:String(row[0]).trim(),
-
-            zone:String(row[1]).trim()
-
-        });
+    raw.forEach((row, index) => {
+        if (index === 0) return;
+        if (!row[0] || !row[1]) return;
+        masterData.push({ code: String(row[0]).trim(), zone: String(row[1]).trim() });
     });
-
     saveMasterList(masterData);
-
     updateStats();
-
-    alert('Master list loaded');
+    showToast(`Master list loaded: ${masterData.length} routes`, 'success');
 });
 
-document.getElementById('templateFile')
-.addEventListener('change',async function(e){
-
+// ─── Load Template ────────────────────────────────────────────────────
+document.getElementById('templateFile').addEventListener('change', async function(e) {
     const file = e.target.files[0];
-
-    if(!file) return;
-
+    if (!file) return;
     const data = await file.arrayBuffer();
-
     templateWorkbook = XLSX.read(data);
-
-    saveTemplate(data,file.name);
-
-    document.getElementById('templateStatus')
-    .innerText =
-        'Loaded: ' + file.name;
+    saveTemplate(data, file.name);
+    document.getElementById('templateStatus').innerText = 'Loaded: ' + file.name;
+    showToast('Template loaded: ' + file.name, 'success');
 });
 
+// ─── Search → group by destination ───────────────────────────────────
 let searchTimeout;
-
-document.getElementById('searchBox')
-.addEventListener('input',function(){
-
+document.getElementById('searchBox').addEventListener('input', function() {
     clearTimeout(searchTimeout);
-
-    const value =
-        this.value.toLowerCase().trim();
-
-    searchTimeout = setTimeout(()=>{
-
-        if(!value){
-
-            matchedRows = [];
-
+    const value = this.value.toLowerCase().trim();
+    searchTimeout = setTimeout(() => {
+        if (!value) {
+            matchedGroups = [];
             renderMatches();
-
             return;
         }
+        const tokens = value.split(' ').filter(t => t.trim() !== '');
 
-        const tokens =
-            value
-            .split(' ')
-            .filter(t => t.trim() !== '');
+        // Filter matching codes
+        const matchingCodes = masterData.filter(row => {
+            const zone = row.zone.toLowerCase();
+            const code = row.code.toLowerCase();
+            return tokens.every(token => zone.includes(token) || code.includes(token));
+        });
 
-        matchedRows =
-            masterData.filter(row=>{
-
-                const zone =
-                    row.zone.toLowerCase();
-
-                const code =
-                    row.code.toLowerCase();
-
-                return tokens.every(token =>
-
-                    zone.includes(token) ||
-
-                    code.includes(token)
-                );
-            });
+        // Group by zone
+        const groupMap = {};
+        matchingCodes.forEach(row => {
+            if (!groupMap[row.zone]) groupMap[row.zone] = { zone: row.zone, codes: [] };
+            groupMap[row.zone].codes.push(row.code);
+        });
+        matchedGroups = Object.values(groupMap);
 
         renderMatches();
-
-    },150);
+    }, 150);
 });
 
-document.getElementById('addBtn')
-.addEventListener('click',function(){
+// ─── Add / Update Selected ────────────────────────────────────────────
+document.getElementById('addBtn').addEventListener('click', function() {
+    const rate = document.getElementById('rate').value;
+    if (!rate) { showToast('Please enter a rate', 'danger'); return; }
 
-    const rate =
-        document.getElementById('rate').value;
+    const effectiveDate = document.getElementById('effectiveDate').value;
+    const today = new Date().toISOString().split('T')[0];
+    if (effectiveDate < today) { showToast('Effective date cannot be before today', 'danger'); return; }
 
-    if(!rate){
+    const selectedZones = getSelectedMatchZones();
+    if (selectedZones.length === 0) { showToast('Select at least one destination', 'danger'); return; }
 
-        alert('Please enter rate');
+    // Get only the codes for selected zones
+    const selectedGroups = matchedGroups.filter(g => selectedZones.includes(g.zone));
 
-        return;
-    }
+    let added = 0, updated = 0;
 
-    const effectiveDate =
-        document.getElementById(
-            'effectiveDate'
-        ).value;
-
-    const today =
-        new Date().toISOString().split('T')[0];
-
-    if(effectiveDate < today){
-
-        alert('Effective date cannot be before today');
-
-        return;
-    }
-
-    matchedRows.forEach(row=>{
-
-        const saved =
-            zonePeriods[
-                row.zone.toLowerCase()
-            ];
-
-        let initial = 1;
-
-        let recurring = 1;
-
-        if(saved){
-
-            initial = saved.initial;
-
+    selectedGroups.forEach(group => {
+        const saved = zonePeriods[group.zone.toLowerCase()];
+        let initial = 1, recurring = 1;
+        if (saved) {
+            initial   = saved.initial;
             recurring = saved.recurring;
-
-        }else{
-
-            initial =
-                document.getElementById(
-                    'initialPeriod'
-                ).value;
-
-            recurring =
-                document.getElementById(
-                    'recurringPeriod'
-                ).value;
-
-            saveZonePeriod(
-                row.zone,
-                initial,
-                recurring
-            );
+        } else {
+            initial   = document.getElementById('initialPeriod').value;
+            recurring = document.getElementById('recurringPeriod').value;
+            saveZonePeriod(group.zone, initial, recurring);
         }
 
-        const existingCode =
-            exportRows.find(x=>
-
-                x.zone === row.zone &&
-
-                x.code === row.code
-            );
-
-        if(existingCode){
-
-            existingCode.rate = rate;
-
-            existingCode.effectiveDate =
-                effectiveDate;
-
-            existingCode.initial =
-                initial;
-
-            existingCode.recurring =
-                recurring;
-
-        }else{
-
-            exportRows.push({
-
-                zone:row.zone,
-
-                code:row.code,
-
-                rate,
-
-                effectiveDate,
-
-                initial,
-
-                recurring
-            });
-        }
-
+        group.codes.forEach(code => {
+            const existing = exportRows.find(x => x.zone === group.zone && x.code === code);
+            if (existing) {
+                existing.rate          = rate;
+                existing.effectiveDate = effectiveDate;
+                existing.initial       = initial;
+                existing.recurring     = recurring;
+                updated++;
+            } else {
+                exportRows.push({ zone: group.zone, code, rate, effectiveDate, initial, recurring });
+                added++;
+            }
+        });
     });
 
     renderPreview();
+    // Refresh match box to update "already added" badges
+    renderMatches();
+    showToast(`Added ${added}, updated ${updated} codes ✓`, 'success');
 });
 
-document.getElementById('clearMatchesBtn')
-.addEventListener('click',function(){
-
-    matchedRows = [];
-
-    document.getElementById('searchBox').value='';
-
+// ─── Clear Matches ────────────────────────────────────────────────────
+document.getElementById('clearMatchesBtn').addEventListener('click', function() {
+    matchedGroups = [];
+    document.getElementById('searchBox').value = '';
+    document.getElementById('matchHeader').style.display = 'none';
     renderMatches();
 });
 
-document.getElementById('clearAllBtn')
-.addEventListener('click',function(){
-
-    exportRows = [];
-
-    renderPreview();
+// ─── Clear All ────────────────────────────────────────────────────────
+document.getElementById('clearAllBtn').addEventListener('click', function() {
+    confirmAction(this, () => {
+        takeSnapshot('Clear All');
+        exportRows = [];
+        renderPreview();
+        showToast('All routes cleared', 'danger');
+    });
 });
 
-document.getElementById('exportBtn')
-.addEventListener('click',function(){
+// ─── Export ───────────────────────────────────────────────────────────
+document.getElementById('exportBtn').addEventListener('click', function() {
+    if (!templateWorkbook) { showToast('Please upload a template first', 'danger'); return; }
+    if (exportRows.length === 0) { showToast('Nothing to export', 'danger'); return; }
 
-    if(!templateWorkbook){
+    const wbCopy = XLSX.read(
+        XLSX.write(templateWorkbook, { type: 'array', bookType: 'xlsx' }),
+        { type: 'array' }
+    );
+    const ws       = wbCopy.Sheets[wbCopy.SheetNames[0]];
+    const startRow = 17;
 
-        alert('Please upload template');
-
-        return;
+    for (let i = startRow; i < startRow + 10000; i++) {
+        ['A','B','C','D','E','F','G'].forEach(col => { delete ws[col + i]; });
     }
 
-    const wb = templateWorkbook;
-
-    const ws =
-        wb.Sheets[
-            wb.SheetNames[0]
-        ];
-
-    let startRow = 17;
-
-    exportRows.forEach((r,index)=>{
-
+    exportRows.forEach((r, index) => {
         const row = startRow + index;
-
-        ws['A'+row] = {
-            t:'s',
-            v:r.zone
-        };
-
-        ws['B'+row] = {
-            t:'s',
-            v:r.code
-        };
-
-        ws['C'+row] = {
-            t:'n',
-            v:Number(r.rate)
-        };
-
-        ws['D'+row] = {
-            t:'s',
-            v:''
-        };
-
-        ws['E'+row] = {
-            t:'s',
-            v:formatDate(r.effectiveDate)
-        };
-
-        ws['F'+row] = {
-            t:'n',
-            v:Number(r.initial)
-        };
-
-        ws['G'+row] = {
-            t:'n',
-            v:Number(r.recurring)
-        };
-
+        ws['A' + row] = { t: 's', v: r.zone };
+        ws['B' + row] = { t: 's', v: r.code };
+        ws['C' + row] = { t: 'n', v: Number(r.rate) };
+        ws['D' + row] = { t: 's', v: '' };
+        ws['E' + row] = { t: 's', v: formatDate(r.effectiveDate) };
+        ws['F' + row] = { t: 'n', v: Number(r.initial) };
+        ws['G' + row] = { t: 'n', v: Number(r.recurring) };
     });
 
-    const totalRows =
-        startRow + exportRows.length;
+    ws['!ref'] = `A1:G${startRow + exportRows.length}`;
 
-    ws['!ref'] =
-        `A1:G${totalRows}`;
+    const customName = document.getElementById('exportFileName').value.trim();
+    const now        = new Date();
+    const timestamp  = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}`;
+    const finalName  = (customName || 'Ratesheet') + '_' + timestamp + '.xlsx';
 
-    const customName =
-        document.getElementById(
-            'exportFileName'
-        ).value.trim();
-
-    const now = new Date();
-
-    const yyyy =
-        now.getFullYear();
-
-    const mm =
-        String(now.getMonth()+1)
-        .padStart(2,'0');
-
-    const dd =
-        String(now.getDate())
-        .padStart(2,'0');
-
-    const hh =
-        String(now.getHours())
-        .padStart(2,'0');
-
-    const min =
-        String(now.getMinutes())
-        .padStart(2,'0');
-
-    const timestamp =
-        `${yyyy}${mm}${dd}_${hh}${min}`;
-
-    const finalName =
-
-        (customName || 'Ratesheet')
-
-        +
-
-        '_'
-
-        +
-
-        timestamp
-
-        +
-
-        '.xlsx';
-
-    XLSX.writeFile(
-        wb,
-        finalName
-    );
+    XLSX.writeFile(wbCopy, finalName);
+    showToast(`Exported: ${finalName} ✓`, 'success');
 });
 
+// ─── Init ─────────────────────────────────────────────────────────────
+loadMasterList();
+loadTemplate();
+loadZonePeriods();
 updateStats();
 
 </script>
-
 </body>
 </html>
