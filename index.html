@@ -5,309 +5,719 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Voice Ratesheet Manager</title>
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 
-*{ box-sizing:border-box; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-body{
-    margin:0;
-    padding:20px;
-    font-family:Arial,sans-serif;
-    background:#f4f6f9;
-    color:#333;
+:root {
+  --orange: #ff7a00;
+  --orange-dark: #e56d00;
+  --orange-light: #fff3e8;
+  --orange-border: #ffd0a0;
+  --red: #cc0000;
+  --red-dark: #aa0000;
+  --green: #00aa55;
+  --gray-50: #f7f8fa;
+  --gray-100: #f0f2f5;
+  --gray-200: #e4e7ed;
+  --gray-400: #9aa0ac;
+  --gray-600: #555e6d;
+  --gray-800: #1e2330;
+  --white: #ffffff;
+  --radius: 10px;
+  --shadow: 0 2px 10px rgba(0,0,0,0.07);
+  --shadow-lg: 0 8px 30px rgba(0,0,0,0.12);
+  --font: 'DM Sans', sans-serif;
+  --mono: 'DM Mono', monospace;
 }
 
-.container{ max-width:1700px; margin:auto; }
-.header{ margin-bottom:20px; }
-.header h1{ margin:0; color:#ff7a00; }
-
-.stats{
-    display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
-    gap:15px;
-    margin-bottom:20px;
+body {
+  font-family: var(--font);
+  background: var(--gray-100);
+  color: var(--gray-800);
+  min-height: 100vh;
+  font-size: 14px;
 }
 
-.stat-card{
-    background:white;
-    padding:20px;
-    border-radius:12px;
-    box-shadow:0 2px 8px rgba(0,0,0,0.08);
+/* ── TOPBAR ─────────────────────────────────────────── */
+.topbar {
+  background: var(--white);
+  border-bottom: 1px solid var(--gray-200);
+  padding: 0 24px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  gap: 16px;
 }
 
-.stat-title{ font-size:13px; color:#666; margin-bottom:8px; }
-.stat-value{ font-size:28px; font-weight:bold; color:#ff7a00; }
-
-.layout{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:20px;
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
 }
 
-@media(max-width:1200px){ .layout{ grid-template-columns:1fr; } }
-
-.card{
-    background:white;
-    border-radius:12px;
-    padding:20px;
-    box-shadow:0 2px 8px rgba(0,0,0,0.08);
-    margin-bottom:20px;
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--orange);
+  white-space: nowrap;
 }
 
-.card h2{ margin-top:0; color:#ff7a00; }
+.logo svg { flex-shrink: 0; }
 
-.row{ display:flex; gap:15px; flex-wrap:wrap; }
-.field{ flex:1; min-width:220px; }
-
-label{ display:block; margin-bottom:6px; font-weight:bold; font-size:14px; }
-
-input, button, select{
-    width:100%;
-    padding:12px;
-    border-radius:8px;
-    border:1px solid #ccc;
-    font-size:14px;
+.topbar-center {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  justify-content: center;
+  max-width: 480px;
 }
 
-input:focus, select:focus{ outline:none; border-color:#ff7a00; }
-
-button{
-    background:#ff7a00;
-    color:white;
-    border:none;
-    cursor:pointer;
-    font-weight:bold;
-    transition: background 0.2s;
+.session-label {
+  font-size: 12px;
+  color: var(--gray-400);
+  white-space: nowrap;
 }
 
-button:hover{ background:#e56d00; }
-.secondary{ background:#666; }
-.secondary:hover{ background:#444; }
-.danger{ background:#cc0000; }
-.danger:hover{ background:#aa0000; }
-
-button.confirming{
-    background:#aa0000 !important;
-    animation: pulse 0.4s ease;
+.session-select {
+  border: 1px solid var(--gray-200);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gray-800);
+  background: var(--gray-50);
+  cursor: pointer;
+  flex: 1;
+  max-width: 200px;
 }
 
-@keyframes pulse{
-    0%{ transform:scale(1); }
-    50%{ transform:scale(1.05); }
-    100%{ transform:scale(1); }
+.session-select:focus { outline: none; border-color: var(--orange); }
+
+.btn-new-session {
+  background: var(--orange);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
 }
 
-.small{ font-size:12px; color:#777; margin-top:5px; }
-.status{ margin-top:8px; color:green; font-size:13px; }
+.btn-new-session:hover { background: var(--orange-dark); }
 
-/* ── Match Box ─────────────────────────────────────── */
-.match-header{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    margin-top:12px;
-    margin-bottom:4px;
-    flex-wrap:wrap;
-    gap:6px;
+.btn-delete-session {
+  background: none;
+  border: 1px solid var(--gray-200);
+  border-radius: 8px;
+  padding: 6px 8px;
+  font-size: 13px;
+  cursor: pointer;
+  color: var(--gray-400);
+  transition: all 0.15s;
+  line-height: 1;
 }
 
-.match-count{
-    font-size:13px;
-    color:#666;
-    font-style:italic;
+.btn-delete-session:hover { border-color: var(--red); color: var(--red); background: #fff5f5; }
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
 }
 
-.match-select-all{
-    display:flex;
-    align-items:center;
-    gap:6px;
-    font-size:13px;
-    color:#444;
-    cursor:pointer;
-    user-select:none;
+.autosave-indicator {
+  font-size: 11px;
+  color: var(--gray-400);
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 5px;
 }
 
-.match-select-all input[type=checkbox]{
-    width:16px;
-    height:16px;
-    padding:0;
-    cursor:pointer;
-    accent-color:#ff7a00;
+.autosave-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  flex-shrink: 0;
+  transition: background 0.3s;
 }
 
-.match-box{
-    border:1px solid #ddd;
-    border-radius:10px;
-    max-height:380px;
-    overflow:auto;
-    background:#fafafa;
+.autosave-dot.saving { background: var(--orange); animation: blink 0.6s infinite; }
+
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+/* Gear button */
+.gear-btn {
+  position: relative;
+  background: none;
+  border: 1px solid var(--gray-200);
+  border-radius: 8px;
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  color: var(--gray-600);
+  transition: all 0.15s;
 }
 
-.match-item{
-    display:flex;
-    align-items:flex-start;
-    gap:10px;
-    padding:12px;
-    border-bottom:1px solid #eee;
-    cursor:pointer;
-    transition: background 0.15s;
+.gear-btn:hover { border-color: var(--orange); color: var(--orange); background: var(--orange-light); }
+
+.gear-btn.open { border-color: var(--orange); color: var(--orange); background: var(--orange-light); }
+
+/* Files dropdown */
+.files-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  padding: 16px;
+  width: 440px;
+  display: none;
+  z-index: 200;
 }
 
-.match-item:last-child{ border-bottom:none; }
+.files-dropdown.open { display: block; }
 
-.match-item:hover{ background:#fff3e8; }
-
-.match-item.selected{ background:#fff3e8; }
-
-.match-item input[type=checkbox]{
-    width:16px;
-    height:16px;
-    min-width:16px;
-    padding:0;
-    margin-top:2px;
-    cursor:pointer;
-    accent-color:#ff7a00;
+.files-dropdown h3 {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gray-600);
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
-.match-item-body{ flex:1; }
+.files-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
-.match-zone{
-    font-weight:bold;
-    margin-bottom:4px;
-    font-size:14px;
+.file-field label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gray-600);
+  margin-bottom: 5px;
 }
 
-.match-codes{
-    font-size:12px;
-    color:#666;
+.file-field input[type=file] {
+  width: 100%;
+  font-family: var(--font);
+  font-size: 12px;
+  color: var(--gray-600);
+  border: 1px dashed var(--gray-200);
+  border-radius: 8px;
+  padding: 8px;
+  cursor: pointer;
+  background: var(--gray-50);
 }
 
-.badge{
-    display:inline-block;
-    padding:3px 8px;
-    border-radius:20px;
-    background:#ffe7d1;
-    color:#d66500;
-    font-size:11px;
-    margin-left:4px;
+.file-field input[type=file]:hover { border-color: var(--orange); }
+
+.file-status {
+  font-size: 11px;
+  color: var(--green);
+  margin-top: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.badge.already{
-    background:#e3f5eb;
-    color:#1a7a40;
+/* ── MAIN LAYOUT ────────────────────────────────────── */
+.main {
+  display: grid;
+  grid-template-columns: 420px 1fr;
+  gap: 16px;
+  padding: 16px 20px;
+  max-width: 1600px;
+  margin: 0 auto;
 }
 
-/* ── Preview Table ─────────────────────────────────── */
-table{ width:100%; border-collapse:collapse; margin-top:15px; }
+@media(max-width: 1100px) { .main { grid-template-columns: 1fr; } }
 
-th, td{
-    padding:10px 12px;
-    border-bottom:1px solid #eee;
-    text-align:left;
-    font-size:14px;
+/* ── CARDS ──────────────────────────────────────────── */
+.card {
+  background: var(--white);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
 }
 
-th{ background:#fafafa; }
-
-th input[type=checkbox], td input[type=checkbox]{
-    width:16px;
-    height:16px;
-    padding:0;
-    cursor:pointer;
-    accent-color:#ff7a00;
+.card-header {
+  padding: 14px 18px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
-.action-btn{ width:auto; padding:8px 12px; font-size:12px; }
-
-.highlight{ background:yellow; font-weight:bold; }
-
-.preview-input{ width:80px; padding:6px; }
-
-/* ── Bulk Edit Bar ─────────────────────────────────── */
-.bulk-bar{
-    display:none;
-    background:#fff8f0;
-    border:1px solid #ffd0a0;
-    border-radius:10px;
-    padding:12px 16px;
-    margin-top:12px;
-    align-items:flex-end;
-    gap:12px;
-    flex-wrap:wrap;
+.card-title {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--gray-600);
+  display: flex;
+  align-items: center;
+  gap: 7px;
 }
 
-.bulk-bar.visible{ display:flex; }
+.card-title svg { color: var(--orange); }
 
-.bulk-bar .field{ min-width:140px; flex:1; }
+.card-body { padding: 14px 18px 18px; }
 
-.bulk-bar label{ font-size:13px; }
+/* ── FORM ELEMENTS ──────────────────────────────────── */
+.form-group { margin-bottom: 12px; }
 
-.bulk-bar input{ padding:8px; font-size:13px; }
-
-.bulk-bar button{ padding:10px 18px; font-size:13px; width:auto; }
-
-.bulk-bar .bulk-info{
-    font-size:13px;
-    color:#d66500;
-    font-weight:bold;
-    align-self:center;
-    white-space:nowrap;
+.form-group label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gray-600);
+  margin-bottom: 5px;
 }
 
-/* ── Undo Bar ──────────────────────────────────────── */
-.undo-bar{
-    display:none;
-    background:#333;
-    color:white;
-    padding:10px 16px;
-    border-radius:8px;
-    margin-top:10px;
-    font-size:13px;
-    align-items:center;
-    justify-content:space-between;
-    gap:10px;
+.form-row { display: flex; gap: 10px; }
+.form-row .form-group { flex: 1; margin-bottom: 0; }
+
+input[type=text], input[type=number], input[type=date], select {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid var(--gray-200);
+  border-radius: 8px;
+  font-family: var(--font);
+  font-size: 13px;
+  color: var(--gray-800);
+  background: var(--white);
+  transition: border-color 0.15s;
+  -webkit-appearance: none;
 }
 
-.undo-bar.visible{ display:flex; }
+input:focus, select:focus { outline: none; border-color: var(--orange); box-shadow: 0 0 0 3px rgba(255,122,0,0.08); }
 
-.undo-bar button{
-    background:#ff7a00;
-    color:white;
-    padding:6px 14px;
-    border:none;
-    border-radius:6px;
-    cursor:pointer;
-    font-size:13px;
-    width:auto;
+/* ── SEARCH BOX ─────────────────────────────────────── */
+.search-wrap { position: relative; }
+
+.search-wrap input {
+  padding-left: 36px;
+  font-size: 13px;
 }
 
-/* ── Toast ─────────────────────────────────────────── */
-#toastContainer{
-    position:fixed;
-    bottom:24px;
-    right:24px;
-    z-index:9999;
-    display:flex;
-    flex-direction:column;
-    gap:8px;
+.search-icon {
+  position: absolute;
+  left: 11px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--gray-400);
+  pointer-events: none;
 }
 
-.toast{
-    background:#333;
-    color:white;
-    padding:12px 20px;
-    border-radius:8px;
-    font-size:14px;
-    font-weight:bold;
-    box-shadow:0 4px 12px rgba(0,0,0,0.2);
-    opacity:1;
-    transition: opacity 0.4s;
-    border-left:4px solid #ff7a00;
+/* ── MATCH BOX ──────────────────────────────────────── */
+.match-header {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 0 4px;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 
-.toast.success{ border-left-color:#00aa55; }
-.toast.danger{ border-left-color:#cc0000; }
-.toast.fading{ opacity:0; }
+.match-header.visible { display: flex; }
+
+.match-count {
+  font-size: 12px;
+  color: var(--gray-400);
+  font-style: italic;
+}
+
+.match-select-all {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--gray-600);
+  cursor: pointer;
+  user-select: none;
+  font-weight: 600;
+}
+
+.match-select-all input[type=checkbox],
+.preview-checkbox,
+th input[type=checkbox] {
+  width: 15px; height: 15px;
+  padding: 0;
+  cursor: pointer;
+  accent-color: var(--orange);
+}
+
+.match-box {
+  border: 1px solid var(--gray-200);
+  border-radius: 8px;
+  max-height: 300px;
+  overflow-y: auto;
+  background: var(--gray-50);
+}
+
+.match-empty {
+  padding: 16px;
+  color: var(--gray-400);
+  font-size: 13px;
+  text-align: center;
+}
+
+.match-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--gray-200);
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.match-item:last-child { border-bottom: none; }
+.match-item:hover { background: var(--orange-light); }
+.match-item.selected { background: var(--orange-light); }
+
+.match-item input[type=checkbox] {
+  width: 15px; height: 15px; min-width: 15px;
+  padding: 0; margin-top: 2px;
+  cursor: pointer; accent-color: var(--orange);
+}
+
+.match-zone { font-weight: 600; font-size: 13px; margin-bottom: 2px; }
+.match-codes { font-size: 11px; color: var(--gray-400); font-family: var(--mono); }
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 7px;
+  border-radius: 20px;
+  background: var(--orange-light);
+  color: var(--orange);
+  font-size: 10px;
+  font-weight: 600;
+  margin-left: 5px;
+}
+
+.badge.already { background: #e3f5eb; color: #1a7a40; }
+
+.highlight { background: #ffe066; border-radius: 2px; }
+
+/* ── BUTTONS ────────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 16px;
+  border-radius: 8px;
+  border: none;
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.btn-primary { background: var(--orange); color: white; }
+.btn-primary:hover { background: var(--orange-dark); }
+.btn-secondary { background: var(--gray-100); color: var(--gray-600); border: 1px solid var(--gray-200); }
+.btn-secondary:hover { background: var(--gray-200); }
+.btn-danger { background: var(--red); color: white; }
+.btn-danger:hover { background: var(--red-dark); }
+.btn-sm { padding: 6px 10px; font-size: 12px; }
+.btn-full { width: 100%; }
+
+.btn.confirming { background: var(--red-dark) !important; animation: pulse 0.3s ease; }
+@keyframes pulse { 0%{transform:scale(1)} 50%{transform:scale(1.03)} 100%{transform:scale(1)} }
+
+.btn-row { display: flex; gap: 8px; margin-top: 12px; }
+.btn-row .btn { flex: 1; }
+
+/* ── QUICK DATE ─────────────────────────────────────── */
+.quick-date-row {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.quick-date-btn {
+  flex: 1;
+  padding: 5px 8px;
+  border: 1px solid var(--gray-200);
+  border-radius: 6px;
+  background: var(--gray-50);
+  font-family: var(--font);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--gray-600);
+  cursor: pointer;
+  transition: all 0.12s;
+  text-align: center;
+}
+
+.quick-date-btn:hover, .quick-date-btn.active {
+  background: var(--orange-light);
+  border-color: var(--orange);
+  color: var(--orange);
+}
+
+/* ── PREVIEW TABLE ──────────────────────────────────── */
+.preview-stats {
+  display: flex;
+  gap: 16px;
+  padding: 10px 18px;
+  background: var(--gray-50);
+  border-bottom: 1px solid var(--gray-200);
+  flex-wrap: wrap;
+}
+
+.pstat {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--gray-600);
+}
+
+.pstat-value {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--orange);
+  font-family: var(--mono);
+}
+
+.table-wrap {
+  overflow-x: auto;
+  max-height: 380px;
+  overflow-y: auto;
+}
+
+table { width: 100%; border-collapse: collapse; }
+
+th {
+  background: var(--gray-50);
+  padding: 9px 12px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--gray-400);
+  border-bottom: 1px solid var(--gray-200);
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+td {
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--gray-200);
+  font-size: 13px;
+  vertical-align: middle;
+}
+
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: var(--gray-50); }
+
+.row-num { color: var(--gray-400); font-size: 11px; font-family: var(--mono); }
+
+.preview-input {
+  width: 72px;
+  padding: 5px 7px;
+  font-size: 12px;
+  font-family: var(--mono);
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  transition: all 0.12s;
+}
+
+.preview-input:hover { border-color: var(--gray-200); background: var(--white); }
+.preview-input:focus { border-color: var(--orange); background: var(--white); outline: none; box-shadow: 0 0 0 3px rgba(255,122,0,0.08); }
+
+input[type=date].preview-input { width: 120px; }
+
+/* ── BULK BAR ────────────────────────────────────────── */
+.bulk-bar {
+  display: none;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 18px;
+  background: var(--orange-light);
+  border-bottom: 1px solid var(--orange-border);
+  flex-wrap: wrap;
+}
+
+.bulk-bar.visible { display: flex; }
+
+.bulk-info {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--orange);
+  white-space: nowrap;
+  margin-right: 4px;
+}
+
+.bulk-bar input {
+  width: 110px;
+  padding: 6px 8px;
+  font-size: 12px;
+  border-radius: 6px;
+  border: 1px solid var(--orange-border);
+  font-family: var(--font);
+}
+
+.bulk-bar input[type=date] { width: 140px; }
+
+.bulk-bar .btn { padding: 6px 12px; font-size: 12px; }
+
+/* ── EXPORT ROW ─────────────────────────────────────── */
+.export-row {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+  padding: 14px 18px;
+  border-top: 1px solid var(--gray-200);
+  background: var(--white);
+  flex-wrap: wrap;
+}
+
+.export-row .form-group { margin-bottom: 0; flex: 1; min-width: 120px; }
+
+/* ── UNDO BAR ────────────────────────────────────────── */
+.undo-bar {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 18px;
+  background: var(--gray-800);
+  color: white;
+  font-size: 12px;
+}
+
+.undo-bar.visible { display: flex; }
+
+.undo-bar .btn { padding: 5px 12px; font-size: 12px; background: var(--orange); color: white; }
+.undo-bar .btn:hover { background: var(--orange-dark); }
+
+/* ── EXCEPTIONS ─────────────────────────────────────── */
+.exceptions-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  padding: 14px 18px;
+  user-select: none;
+}
+
+.exceptions-header:hover { background: var(--gray-50); }
+
+.exc-count-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 20px;
+  background: var(--orange-light);
+  color: var(--orange);
+  font-size: 11px;
+  font-weight: 700;
+  margin-left: 8px;
+}
+
+.exceptions-body { display: none; padding: 0 18px 18px; }
+.exceptions-body.open { display: block; }
+
+.exc-search-row { display: flex; gap: 8px; margin-bottom: 10px; align-items: flex-end; }
+.exc-search-row input { flex: 1; }
+
+/* ── TOAST ──────────────────────────────────────────── */
+#toastContainer {
+  position: fixed;
+  bottom: 20px; right: 20px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.toast {
+  background: var(--gray-800);
+  color: white;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: var(--shadow-lg);
+  border-left: 3px solid var(--orange);
+  opacity: 1;
+  transition: opacity 0.3s;
+  max-width: 320px;
+}
+
+.toast.success { border-left-color: var(--green); }
+.toast.danger  { border-left-color: var(--red); }
+.toast.fading  { opacity: 0; }
+
+/* ── NEW SESSION MODAL ──────────────────────────────── */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 500;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-overlay.open { display: flex; }
+
+.modal {
+  background: var(--white);
+  border-radius: var(--radius);
+  padding: 24px;
+  width: 340px;
+  box-shadow: var(--shadow-lg);
+}
+
+.modal h3 { font-size: 15px; font-weight: 700; margin-bottom: 14px; }
+
+.modal input {
+  width: 100%; margin-bottom: 14px;
+  padding: 10px 12px;
+  border: 1px solid var(--gray-200);
+  border-radius: 8px;
+  font-family: var(--font);
+  font-size: 14px;
+}
+
+.modal input:focus { outline: none; border-color: var(--orange); }
+
+.modal-btns { display: flex; gap: 8px; }
+.modal-btns .btn { flex: 1; }
+
+/* scrollbar */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--gray-200); border-radius: 10px; }
 
 </style>
 </head>
@@ -315,892 +725,940 @@ th input[type=checkbox], td input[type=checkbox]{
 
 <div id="toastContainer"></div>
 
-<div class="container">
-
-<div class="header">
-    <h1>Voice Ratesheet Manager</h1>
+<!-- NEW SESSION MODAL -->
+<div class="modal-overlay" id="newSessionModal">
+  <div class="modal">
+    <h3>New Session</h3>
+    <input type="text" id="newSessionName" placeholder="e.g. June Etisalat" maxlength="50">
+    <div class="modal-btns">
+      <button class="btn btn-secondary" id="cancelNewSession">Cancel</button>
+      <button class="btn btn-primary" id="confirmNewSession">Create</button>
+    </div>
+  </div>
 </div>
 
-<div class="stats">
-    <div class="stat-card">
-        <div class="stat-title">Loaded Routes</div>
-        <div class="stat-value" id="routesCount">0</div>
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="logo">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>
+      Voice Ratesheet
     </div>
-    <div class="stat-card">
-        <div class="stat-title">Added Codes</div>
-        <div class="stat-value" id="addedCount">0</div>
+  </div>
+
+  <div class="topbar-center">
+    <span class="session-label">Session:</span>
+    <select class="session-select" id="sessionDropdown"></select>
+    <button class="btn-new-session" id="btnNewSession">+ New</button>
+    <button class="btn-delete-session" id="btnDeleteSession" title="Delete session">🗑</button>
+  </div>
+
+  <div class="topbar-right">
+    <div class="autosave-indicator">
+      <div class="autosave-dot" id="autosaveDot"></div>
+      <span id="autosaveText">Saved</span>
     </div>
-    <div class="stat-card">
-        <div class="stat-title">Saved Exceptions</div>
-        <div class="stat-value" id="exceptionsCount">0</div>
+    <div style="position:relative;">
+      <button class="gear-btn" id="gearBtn" title="Files & Settings">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
+      <div class="files-dropdown" id="filesDropdown">
+        <h3>Files & Settings</h3>
+        <div class="files-grid">
+          <div class="file-field">
+            <label>Master Code List</label>
+            <input type="file" id="masterFile" accept=".xlsx,.xls,.csv">
+            <div class="file-status" id="masterStatus"></div>
+            <div style="font-size:11px;color:var(--gray-400);margin-top:3px;">Col A = Code · Col B = Destination</div>
+          </div>
+          <div class="file-field">
+            <label>Export Template</label>
+            <input type="file" id="templateFile" accept=".xlsx,.xls">
+            <div class="file-status" id="templateStatus"></div>
+          </div>
+        </div>
+      </div>
     </div>
+  </div>
 </div>
 
-<div class="layout">
+<!-- MAIN -->
+<div class="main">
 
-<!-- LEFT COLUMN -->
-<div>
+  <!-- LEFT: Add Routes -->
+  <div style="display:flex;flex-direction:column;gap:16px;">
 
     <div class="card">
-        <h2>Files</h2>
-        <div class="row">
-            <div class="field">
-                <label>Master Code List</label>
-                <input type="file" id="masterFile" accept=".xlsx,.xls,.csv">
-                <div class="small">Column A = Code<br>Column B = Destination</div>
-            </div>
-            <div class="field">
-                <label>Export Template</label>
-                <input type="file" id="templateFile" accept=".xlsx,.xls">
-                <div class="status" id="templateStatus"></div>
-            </div>
+      <div class="card-header">
+        <div class="card-title">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add / Update Routes
         </div>
+      </div>
+      <div class="card-body">
+
+        <div class="form-group">
+          <label>Search Destination</label>
+          <div class="search-wrap">
+            <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="searchBox" placeholder="Type destination name or code...">
+          </div>
+        </div>
+
+        <div class="match-header" id="matchHeader">
+          <span class="match-count" id="matchCount"></span>
+          <label class="match-select-all">
+            <input type="checkbox" id="selectAllMatches"> Select All
+          </label>
+        </div>
+
+        <div class="match-box" id="matchBox">
+          <div class="match-empty">Type above to search destinations</div>
+        </div>
+
+        <div style="margin-top:14px;">
+          <div class="form-row" style="margin-bottom:10px;">
+            <div class="form-group">
+              <label>Rate</label>
+              <input type="number" step="0.000001" id="rate" placeholder="0.01200">
+            </div>
+            <div class="form-group">
+              <label>Effective Date</label>
+              <div class="quick-date-row">
+                <button class="quick-date-btn active" data-days="0">Today</button>
+                <button class="quick-date-btn" data-days="1">+1</button>
+                <button class="quick-date-btn" data-days="7">+7</button>
+              </div>
+              <input type="date" id="effectiveDate">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Initial (Min)</label>
+              <input type="number" id="initialPeriod" value="1">
+            </div>
+            <div class="form-group">
+              <label>Recurring (Min)</label>
+              <input type="number" id="recurringPeriod" value="1">
+            </div>
+          </div>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn btn-primary btn-full" id="addBtn">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add / Update Selected
+          </button>
+          <button class="btn btn-secondary" id="clearMatchesBtn">Clear</button>
+        </div>
+
+      </div>
     </div>
 
-    <div class="card">
-        <h2>Add Routes</h2>
-        <div class="row">
-            <div class="field">
-                <label>Search</label>
-                <input type="text" id="searchBox" placeholder="sudan mobile zain">
-            </div>
-            <div class="field">
-                <label>Rate</label>
-                <input type="number" step="0.000001" id="rate">
-            </div>
-            <div class="field">
-                <label>Effective Date</label>
-                <input type="date" id="effectiveDate">
-            </div>
-        </div>
-        <div class="row" style="margin-top:15px;">
-            <div class="field">
-                <label>Quick Date</label>
-                <select id="quickDate">
-                    <option value="0">Today</option>
-                    <option value="1">Tomorrow</option>
-                    <option value="7">+7 Days</option>
-                </select>
-            </div>
-            <div class="field">
-                <label>Initial</label>
-                <input type="number" id="initialPeriod" value="1">
-            </div>
-            <div class="field">
-                <label>Recurring</label>
-                <input type="number" id="recurringPeriod" value="1">
-            </div>
-        </div>
+  </div>
 
-        <!-- Match header: count + select all -->
-        <div class="match-header" id="matchHeader" style="display:none;">
-            <div class="match-count" id="matchCount"></div>
-            <label class="match-select-all">
-                <input type="checkbox" id="selectAllMatches">
-                Select All
-            </label>
-        </div>
+  <!-- RIGHT: Preview -->
+  <div class="card" style="display:flex;flex-direction:column;">
 
-        <div class="match-box" id="matchBox"></div>
-
-        <div class="row" style="margin-top:15px;">
-            <div class="field">
-                <button id="addBtn">Add / Update Selected</button>
-            </div>
-            <div class="field">
-                <button class="secondary" id="clearMatchesBtn">Clear Matches</button>
-            </div>
-        </div>
+    <div class="card-header" style="padding:14px 18px;">
+      <div class="card-title">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        Preview &amp; Export
+      </div>
+      <button class="btn btn-danger btn-sm" id="clearAllBtn">Clear All</button>
     </div>
 
-</div>
+    <!-- Preview stats -->
+    <div class="preview-stats" id="previewStats">
+      <div class="pstat"><span class="pstat-value" id="statDest">0</span> Destinations</div>
+      <div class="pstat"><span class="pstat-value" id="statCodes">0</span> Codes</div>
+      <div class="pstat"><span class="pstat-value" id="statRates">0</span> Unique Rates</div>
+    </div>
 
-<!-- RIGHT COLUMN -->
-<div>
+    <!-- Bulk bar -->
+    <div class="bulk-bar" id="bulkBar">
+      <span class="bulk-info" id="bulkInfo">0 selected</span>
+      <input type="number" step="0.000001" id="bulkRate" placeholder="Bulk rate">
+      <input type="date" id="bulkDate">
+      <button class="btn btn-primary" id="applyBulkBtn">Apply</button>
+      <button class="btn btn-danger" id="deleteSelectedBtn">Delete Selected</button>
+    </div>
 
-    <div class="card">
-        <h2>Preview</h2>
+    <!-- Undo bar -->
+    <div class="undo-bar" id="undoBar">
+      <span id="undoMessage">Last action can be undone</span>
+      <button class="btn" id="undoBtn">↩ Undo</button>
+    </div>
 
-        <!-- Bulk edit bar -->
-        <div class="bulk-bar" id="bulkBar">
-            <div class="bulk-info" id="bulkInfo">0 selected</div>
-            <div class="field">
-                <label>Bulk Rate</label>
-                <input type="number" step="0.000001" id="bulkRate" placeholder="leave blank to skip">
-            </div>
-            <div class="field">
-                <label>Bulk Date</label>
-                <input type="date" id="bulkDate">
-            </div>
-            <button id="applyBulkBtn">Apply to Selected</button>
-            <button class="danger action-btn" id="deleteSelectedBtn">Delete Selected</button>
+    <!-- Table -->
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:32px;"><input type="checkbox" id="selectAllPreview"></th>
+            <th style="width:30px;">#</th>
+            <th>Destination</th>
+            <th>Codes</th>
+            <th>Rate</th>
+            <th>Date</th>
+            <th>Init</th>
+            <th>Rec</th>
+            <th style="width:60px;"></th>
+          </tr>
+        </thead>
+        <tbody id="previewBody"></tbody>
+      </table>
+    </div>
+
+    <!-- Export row -->
+    <div class="export-row">
+      <div class="form-group">
+        <label>File Name</label>
+        <input type="text" id="exportFileName" placeholder="Ratesheet">
+      </div>
+      <div class="form-group" style="max-width:100px;">
+        <label>Start Row</label>
+        <input type="number" id="startRowInput" value="17" min="1">
+      </div>
+      <button class="btn btn-primary" id="exportBtn" style="flex-shrink:0;padding:9px 20px;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Generate XLSX
+      </button>
+    </div>
+
+    <!-- Exceptions -->
+    <div style="border-top:1px solid var(--gray-200);">
+      <div class="exceptions-header" id="exceptionsToggle">
+        <div class="card-title">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          Period Exceptions
+          <span class="exc-count-badge" id="excCountBadge">0</span>
         </div>
-
-        <table>
+        <svg id="excChevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color:var(--gray-400);transition:transform 0.2s;"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="exceptions-body" id="exceptionsBody">
+        <div class="exc-search-row">
+          <input type="text" id="exceptionsSearch" placeholder="Filter exceptions...">
+          <button class="btn btn-danger btn-sm" id="deleteFilteredBtn">Delete Filtered</button>
+        </div>
+        <div class="table-wrap" style="max-height:220px;">
+          <table>
             <thead>
-                <tr>
-                    <th><input type="checkbox" id="selectAllPreview" title="Select All"></th>
-                    <th>Destination</th>
-                    <th>Codes</th>
-                    <th>Rate</th>
-                    <th>Date</th>
-                    <th>Init</th>
-                    <th>Rec</th>
-                    <th>Delete</th>
-                </tr>
+              <tr>
+                <th>Destination</th>
+                <th>Initial</th>
+                <th>Recurring</th>
+                <th style="width:60px;"></th>
+              </tr>
             </thead>
-            <tbody id="previewBody"></tbody>
-        </table>
-
-        <!-- Undo bar -->
-        <div class="undo-bar" id="undoBar">
-            <span id="undoMessage">Last action can be undone</span>
-            <button id="undoBtn">↩ Undo</button>
+            <tbody id="excTableBody"></tbody>
+          </table>
         </div>
-
-        <div class="row" style="margin-top:15px;">
-            <div class="field">
-                <label>Export File Name</label>
-                <input type="text" id="exportFileName" placeholder="Ratesheet">
-            </div>
-            <div class="field">
-                <button id="exportBtn">Generate XLSX</button>
-            </div>
-            <div class="field">
-                <button class="danger" id="clearAllBtn">Clear All</button>
-            </div>
-        </div>
+      </div>
     </div>
 
-    <div class="card">
-        <div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;" onclick="toggleExceptions()">
-            <h2 style="margin:0;">Period Exceptions</h2>
-            <button type="button" class="secondary action-btn" id="exceptionsToggleBtn">Expand</button>
-        </div>
-
-        <div id="exceptionsContainer" style="display:none; margin-top:20px;">
-            <div class="row">
-                <div class="field">
-                    <label>Search Exceptions</label>
-                    <input type="text" id="exceptionsSearch" placeholder="latvia, sudan, zain...">
-                </div>
-                <div class="field">
-                    <label>&nbsp;</label>
-                    <button class="danger" id="deleteFilteredBtn">Delete Filtered Exceptions</button>
-                </div>
-            </div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Zone</th>
-                        <th>Initial</th>
-                        <th>Recurring</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="exceptionsBody"></tbody>
-            </table>
-        </div>
-    </div>
-
-</div>
-</div>
+  </div>
 </div>
 
 <script>
-
+// ═══════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════
 let masterData    = [];
-let matchedGroups = [];   // grouped by destination: [{zone, codes:[]}]
+let matchedGroups = [];
 let exportRows    = [];
 let templateWorkbook = null;
 let zonePeriods   = {};
+let currentSession = null;
+let autosaveTimer  = null;
 
-// ─── Snapshot / Undo ────────────────────────────────────────────────
-let lastSnapshot = null;
-let undoTimer    = null;
+// ─── Toast ───────────────────────────────────────────
+function showToast(msg, type) {
+  const t = document.createElement('div');
+  t.className = 'toast' + (type ? ' ' + type : '');
+  t.innerText = msg;
+  document.getElementById('toastContainer').appendChild(t);
+  setTimeout(() => { t.classList.add('fading'); setTimeout(() => t.remove(), 350); }, 2400);
+}
+
+// ─── Confirm on 2nd click ────────────────────────────
+function confirmAction(btn, action) {
+  if (btn.dataset.confirming === 'true') {
+    action();
+    btn.dataset.confirming = 'false';
+    btn.innerText = btn.dataset.orig;
+    btn.classList.remove('confirming');
+    clearTimeout(btn._ct);
+    return;
+  }
+  btn.dataset.orig = btn.innerText;
+  btn.dataset.confirming = 'true';
+  btn.innerText = 'Sure?';
+  btn.classList.add('confirming');
+  btn._ct = setTimeout(() => {
+    btn.dataset.confirming = 'false';
+    btn.innerText = btn.dataset.orig;
+    btn.classList.remove('confirming');
+  }, 3000);
+}
+
+// ─── Undo ────────────────────────────────────────────
+let lastSnapshot = null, undoTimer = null;
 
 function takeSnapshot(label) {
-    lastSnapshot = { rows: JSON.parse(JSON.stringify(exportRows)), label };
-    const bar = document.getElementById('undoBar');
-    document.getElementById('undoMessage').innerText = `"${label}" can be undone`;
-    bar.classList.add('visible');
-    clearTimeout(undoTimer);
-    undoTimer = setTimeout(() => {
-        bar.classList.remove('visible');
-        lastSnapshot = null;
-    }, 8000);
+  lastSnapshot = { rows: JSON.parse(JSON.stringify(exportRows)), label };
+  document.getElementById('undoMessage').innerText = `"${label}" — undo available`;
+  document.getElementById('undoBar').classList.add('visible');
+  clearTimeout(undoTimer);
+  undoTimer = setTimeout(() => { document.getElementById('undoBar').classList.remove('visible'); lastSnapshot = null; }, 8000);
 }
 
-function hideUndoBar() {
-    document.getElementById('undoBar').classList.remove('visible');
-    clearTimeout(undoTimer);
-    lastSnapshot = null;
-}
-
-document.getElementById('undoBtn').addEventListener('click', function() {
-    if (!lastSnapshot) return;
-    exportRows = lastSnapshot.rows;
-    hideUndoBar();
-    renderPreview();
-    showToast('Undone ↩', 'success');
+document.getElementById('undoBtn').addEventListener('click', () => {
+  if (!lastSnapshot) return;
+  exportRows = lastSnapshot.rows;
+  document.getElementById('undoBar').classList.remove('visible');
+  lastSnapshot = null;
+  renderPreview();
+  showToast('Undone ↩', 'success');
 });
 
-// ─── Toast ───────────────────────────────────────────────────────────
-function showToast(msg, type) {
-    const container = document.getElementById('toastContainer');
-    const t = document.createElement('div');
-    t.className = 'toast' + (type ? ' ' + type : '');
-    t.innerText = msg;
-    container.appendChild(t);
-    setTimeout(() => {
-        t.classList.add('fading');
-        setTimeout(() => t.remove(), 400);
-    }, 2500);
-}
-
-// ─── Confirm on second click ─────────────────────────────────────────
-function confirmAction(btn, action) {
-    if (btn.dataset.confirming === 'true') {
-        action();
-        btn.dataset.confirming = 'false';
-        btn.innerText = btn.dataset.originalText;
-        btn.classList.remove('confirming');
-        clearTimeout(btn._confirmTimer);
-        return;
-    }
-    btn.dataset.originalText = btn.innerText;
-    btn.dataset.confirming = 'true';
-    btn.innerText = 'Sure? (click again)';
-    btn.classList.add('confirming');
-    btn._confirmTimer = setTimeout(() => {
-        btn.dataset.confirming = 'false';
-        btn.innerText = btn.dataset.originalText;
-        btn.classList.remove('confirming');
-    }, 3000);
-}
-
-// ─── Stats ────────────────────────────────────────────────────────────
-function updateStats() {
-    document.getElementById('routesCount').innerText  = masterData.length;
-    document.getElementById('addedCount').innerText   = exportRows.length;
-    document.getElementById('exceptionsCount').innerText = Object.keys(zonePeriods).length;
-}
-
-// ─── Date helpers ─────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════
+// DATE HELPERS
+// ═══════════════════════════════════════════════════════
 function setDate(days = 0) {
-    const d = new Date();
-    d.setDate(d.getDate() + days);
-    const v = d.toISOString().split('T')[0];
-    document.getElementById('effectiveDate').value = v;
-    document.getElementById('effectiveDate').min   = new Date().toISOString().split('T')[0];
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  document.getElementById('effectiveDate').value = d.toISOString().split('T')[0];
+  document.getElementById('effectiveDate').min   = new Date().toISOString().split('T')[0];
 }
-
 setDate(0);
 
-function formatDate(dateString) {
-    const [yyyy, mm, dd] = dateString.split('-');
-    return `${mm}/${dd}/${yyyy} 00:00`;
+function formatDate(ds) {
+  const [y,m,d] = ds.split('-');
+  return `${m}/${d}/${y} 00:00`;
 }
 
-// ─── Persistence ──────────────────────────────────────────────────────
+// Quick date buttons
+document.querySelectorAll('.quick-date-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.quick-date-btn').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+    setDate(parseInt(this.dataset.days));
+  });
+});
+
+// ═══════════════════════════════════════════════════════
+// AUTOSAVE
+// ═══════════════════════════════════════════════════════
+function triggerAutosave() {
+  if (!currentSession) return;
+  const dot  = document.getElementById('autosaveDot');
+  const text = document.getElementById('autosaveText');
+  dot.classList.add('saving');
+  text.innerText = 'Saving…';
+  clearTimeout(autosaveTimer);
+  autosaveTimer = setTimeout(() => {
+    saveCurrentSession();
+    dot.classList.remove('saving');
+    const now = new Date();
+    text.innerText = `Saved ${now.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}`;
+  }, 800);
+}
+
+function saveCurrentSession() {
+  if (!currentSession) return;
+  const sessions = getAllSessions();
+  sessions[currentSession] = {
+    exportRows:  JSON.parse(JSON.stringify(exportRows)),
+    zonePeriods: JSON.parse(JSON.stringify(zonePeriods)),
+    savedAt: new Date().toISOString()
+  };
+  localStorage.setItem('sessions', JSON.stringify(sessions));
+}
+
+// ═══════════════════════════════════════════════════════
+// SESSION MANAGEMENT
+// ═══════════════════════════════════════════════════════
+function getAllSessions() {
+  try { return JSON.parse(localStorage.getItem('sessions') || '{}'); } catch { return {}; }
+}
+
+function refreshSessionDropdown(selectName) {
+  const dd = document.getElementById('sessionDropdown');
+  const sessions = getAllSessions();
+  const keys = Object.keys(sessions).sort();
+  dd.innerHTML = '';
+  if (keys.length === 0) {
+    const opt = document.createElement('option');
+    opt.value = ''; opt.textContent = 'No sessions yet';
+    dd.appendChild(opt);
+  } else {
+    keys.forEach(name => {
+      const opt = document.createElement('option');
+      opt.value = name; opt.textContent = name;
+      dd.appendChild(opt);
+    });
+  }
+  if (selectName && keys.includes(selectName)) dd.value = selectName;
+}
+
+function loadSessionByName(name) {
+  const sessions = getAllSessions();
+  const s = sessions[name];
+  if (!s) return;
+  exportRows  = JSON.parse(JSON.stringify(s.exportRows  || []));
+  zonePeriods = JSON.parse(JSON.stringify(s.zonePeriods || {}));
+  localStorage.setItem('zonePeriods', JSON.stringify(zonePeriods));
+  currentSession = name;
+  renderPreview();
+  renderExceptions();
+  updateExcBadge();
+  const dot  = document.getElementById('autosaveDot');
+  const text = document.getElementById('autosaveText');
+  dot.classList.remove('saving');
+  const saved = new Date(s.savedAt);
+  text.innerText = `Saved ${saved.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}`;
+}
+
+// Switch session via dropdown
+document.getElementById('sessionDropdown').addEventListener('change', function() {
+  if (!this.value) return;
+  loadSessionByName(this.value);
+  showToast(`Session "${this.value}" loaded`, 'success');
+});
+
+// New session modal
+document.getElementById('btnNewSession').addEventListener('click', () => {
+  document.getElementById('newSessionName').value = '';
+  document.getElementById('newSessionModal').classList.add('open');
+  setTimeout(() => document.getElementById('newSessionName').focus(), 50);
+});
+
+document.getElementById('cancelNewSession').addEventListener('click', () => {
+  document.getElementById('newSessionModal').classList.remove('open');
+});
+
+document.getElementById('confirmNewSession').addEventListener('click', createNewSession);
+document.getElementById('newSessionName').addEventListener('keydown', e => { if (e.key === 'Enter') createNewSession(); });
+
+function createNewSession() {
+  const name = document.getElementById('newSessionName').value.trim();
+  if (!name) { showToast('Enter a session name', 'danger'); return; }
+  const sessions = getAllSessions();
+  if (sessions[name]) { showToast('Session name already exists', 'danger'); return; }
+  // Save blank session
+  sessions[name] = { exportRows: [], zonePeriods: {}, savedAt: new Date().toISOString() };
+  localStorage.setItem('sessions', JSON.stringify(sessions));
+  // Clear current state
+  exportRows  = [];
+  zonePeriods = {};
+  localStorage.setItem('zonePeriods', '{}');
+  currentSession = name;
+  refreshSessionDropdown(name);
+  document.getElementById('newSessionModal').classList.remove('open');
+  renderPreview();
+  renderExceptions();
+  updateExcBadge();
+  document.getElementById('autosaveText').innerText = 'Saved';
+  showToast(`Session "${name}" created ✓`, 'success');
+}
+
+// Delete session
+document.getElementById('btnDeleteSession').addEventListener('click', function() {
+  const name = document.getElementById('sessionDropdown').value;
+  if (!name) { showToast('No session selected', 'danger'); return; }
+  confirmAction(this, () => {
+    const sessions = getAllSessions();
+    delete sessions[name];
+    localStorage.setItem('sessions', JSON.stringify(sessions));
+    // load first remaining or clear
+    const remaining = Object.keys(sessions).sort();
+    exportRows = []; zonePeriods = {};
+    currentSession = null;
+    if (remaining.length > 0) {
+      refreshSessionDropdown(remaining[0]);
+      loadSessionByName(remaining[0]);
+    } else {
+      refreshSessionDropdown('');
+      renderPreview(); renderExceptions(); updateExcBadge();
+      document.getElementById('autosaveText').innerText = 'No session';
+    }
+    showToast(`Session "${name}" deleted`, 'danger');
+  });
+});
+
+// ═══════════════════════════════════════════════════════
+// PERSISTENCE: master list, template, zone periods
+// ═══════════════════════════════════════════════════════
 function saveMasterList(data) { localStorage.setItem('masterData', JSON.stringify(data)); }
 
 function loadMasterList() {
-    const data = localStorage.getItem('masterData');
-    if (data) masterData = JSON.parse(data);
-    updateStats();
+  try { masterData = JSON.parse(localStorage.getItem('masterData') || '[]'); } catch { masterData = []; }
+  if (masterData.length) {
+    document.getElementById('masterStatus').innerText = `✓ ${masterData.length} routes loaded`;
+  }
 }
 
 function saveTemplate(data, name) {
-    localStorage.setItem('templateData', JSON.stringify(Array.from(new Uint8Array(data))));
-    localStorage.setItem('templateName', name);
+  localStorage.setItem('templateData', JSON.stringify(Array.from(new Uint8Array(data))));
+  localStorage.setItem('templateName', name);
 }
 
 function loadTemplate() {
-    const data = localStorage.getItem('templateData');
-    if (!data) return;
+  const data = localStorage.getItem('templateData');
+  if (!data) return;
+  try {
     templateWorkbook = XLSX.read(new Uint8Array(JSON.parse(data)), { type: 'array' });
-    document.getElementById('templateStatus').innerText = 'Loaded: ' + localStorage.getItem('templateName');
-}
-
-function loadZonePeriods() {
-    const data = localStorage.getItem('zonePeriods');
-    if (data) zonePeriods = JSON.parse(data);
-    renderExceptions();
-    updateStats();
+    document.getElementById('templateStatus').innerText = '✓ ' + localStorage.getItem('templateName');
+  } catch {}
 }
 
 function saveZonePeriod(zone, initial, recurring) {
-    if (Number(initial) === 1 && Number(recurring) === 1) {
-        delete zonePeriods[zone.toLowerCase()];
-    } else {
-        zonePeriods[zone.toLowerCase()] = { initial, recurring };
-    }
-    localStorage.setItem('zonePeriods', JSON.stringify(zonePeriods));
-    renderExceptions();
-    updateStats();
+  if (Number(initial) === 1 && Number(recurring) === 1) {
+    delete zonePeriods[zone.toLowerCase()];
+  } else {
+    zonePeriods[zone.toLowerCase()] = { initial, recurring };
+  }
+  localStorage.setItem('zonePeriods', JSON.stringify(zonePeriods));
+  renderExceptions();
+  updateExcBadge();
+  triggerAutosave();
 }
 
-// ─── Get selected match zones ─────────────────────────────────────────
+// ═══════════════════════════════════════════════════════
+// GEAR / FILES DROPDOWN
+// ═══════════════════════════════════════════════════════
+document.getElementById('gearBtn').addEventListener('click', function(e) {
+  e.stopPropagation();
+  this.classList.toggle('open');
+  document.getElementById('filesDropdown').classList.toggle('open');
+});
+
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('#gearBtn') && !e.target.closest('#filesDropdown')) {
+    document.getElementById('gearBtn').classList.remove('open');
+    document.getElementById('filesDropdown').classList.remove('open');
+  }
+});
+
+document.getElementById('masterFile').addEventListener('change', async function(e) {
+  const file = e.target.files[0]; if (!file) return;
+  const data = await file.arrayBuffer();
+  const wb   = XLSX.read(data);
+  const raw  = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 });
+  masterData = [];
+  raw.forEach((row, i) => {
+    if (i === 0 || !row[0] || !row[1]) return;
+    masterData.push({ code: String(row[0]).trim(), zone: String(row[1]).trim() });
+  });
+  saveMasterList(masterData);
+  document.getElementById('masterStatus').innerText = `✓ ${masterData.length} routes loaded`;
+  showToast(`Master list: ${masterData.length} routes ✓`, 'success');
+});
+
+document.getElementById('templateFile').addEventListener('change', async function(e) {
+  const file = e.target.files[0]; if (!file) return;
+  const data = await file.arrayBuffer();
+  templateWorkbook = XLSX.read(data);
+  saveTemplate(data, file.name);
+  document.getElementById('templateStatus').innerText = '✓ ' + file.name;
+  showToast('Template loaded ✓', 'success');
+});
+
+// ═══════════════════════════════════════════════════════
+// SEARCH & MATCH BOX
+// ═══════════════════════════════════════════════════════
 function getSelectedMatchZones() {
-    return Array.from(
-        document.querySelectorAll('.match-checkbox:checked')
-    ).map(cb => cb.dataset.zone);
+  return Array.from(document.querySelectorAll('.match-checkbox:checked')).map(cb => cb.dataset.zone);
 }
 
-// ─── Render: Matches (grouped by destination) ─────────────────────────
 function renderMatches() {
-    const box       = document.getElementById('matchBox');
-    const header    = document.getElementById('matchHeader');
-    const countEl   = document.getElementById('matchCount');
-    const selectAll = document.getElementById('selectAllMatches');
+  const box    = document.getElementById('matchBox');
+  const header = document.getElementById('matchHeader');
+  const countEl = document.getElementById('matchCount');
 
-    if (matchedGroups.length === 0) {
-        box.innerHTML = '<div class="match-item" style="cursor:default;">No matches</div>';
-        header.style.display = 'none';
-        return;
-    }
+  if (matchedGroups.length === 0) {
+    box.innerHTML = `<div class="match-empty">${document.getElementById('searchBox').value ? 'No matches found' : 'Type above to search destinations'}</div>`;
+    header.classList.remove('visible');
+    return;
+  }
 
-    header.style.display = 'flex';
+  header.classList.add('visible');
+  const totalCodes = matchedGroups.reduce((s,g) => s + g.codes.length, 0);
+  countEl.innerText = `${matchedGroups.length} destination${matchedGroups.length!==1?'s':''} · ${totalCodes} codes`;
 
-    const totalCodes = matchedGroups.reduce((s, g) => s + g.codes.length, 0);
-    const destCount  = matchedGroups.length;
-    countEl.innerText = `${destCount} destination${destCount !== 1 ? 's' : ''} · ${totalCodes} code${totalCodes !== 1 ? 's' : ''}`;
+  const tokens     = document.getElementById('searchBox').value.toLowerCase().split(' ').filter(t=>t);
+  const addedZones = new Set(exportRows.map(r => r.zone));
 
-    const searchValue = document.getElementById('searchBox').value.toLowerCase();
-    const tokens      = searchValue.split(' ').filter(t => t);
-
-    // Already-added zones
-    const addedZones = new Set(exportRows.map(r => r.zone));
-
-    let html = '';
-    matchedGroups.forEach((group, i) => {
-        let zoneDisplay = group.zone;
-        tokens.forEach(token => {
-            const regex = new RegExp(`(${token})`, 'ig');
-            zoneDisplay = zoneDisplay.replace(regex, '<span class="highlight">$1</span>');
-        });
-
-        const isAdded = addedZones.has(group.zone);
-        const codePreview = group.codes.slice(0, 4).join(', ')
-            + (group.codes.length > 4 ? ` <span class="badge">+${group.codes.length - 4} more</span>` : '');
-
-        const alreadyBadge = isAdded
-            ? `<span class="badge already">✓ already added</span>`
-            : '';
-
-        html += `
-        <div class="match-item" data-idx="${i}">
-            <input type="checkbox" class="match-checkbox" data-zone="${group.zone}" data-idx="${i}">
-            <div class="match-item-body">
-                <div class="match-zone">${zoneDisplay} ${alreadyBadge}</div>
-                <div class="match-codes">${codePreview}</div>
-            </div>
-        </div>`;
+  box.innerHTML = matchedGroups.map((group, i) => {
+    let zoneDisplay = group.zone;
+    tokens.forEach(tok => {
+      zoneDisplay = zoneDisplay.replace(new RegExp(`(${tok})`, 'ig'), '<span class="highlight">$1</span>');
     });
+    const isAdded     = addedZones.has(group.zone);
+    const codePreview = group.codes.slice(0,5).join(', ') + (group.codes.length > 5 ? ` <span class="badge">+${group.codes.length-5}</span>` : '');
+    const alreadyBadge = isAdded ? `<span class="badge already">✓ added</span>` : '';
+    return `<div class="match-item" data-idx="${i}">
+      <input type="checkbox" class="match-checkbox" data-zone="${group.zone}">
+      <div style="flex:1;min-width:0;">
+        <div class="match-zone">${zoneDisplay} ${alreadyBadge}</div>
+        <div class="match-codes">${codePreview}</div>
+      </div>
+    </div>`;
+  }).join('');
 
-    box.innerHTML = html;
-
-    // Clicking anywhere on the row toggles checkbox
-    box.querySelectorAll('.match-item').forEach(item => {
-        item.addEventListener('click', function(e) {
-            if (e.target.type === 'checkbox') return;
-            const cb = this.querySelector('.match-checkbox');
-            cb.checked = !cb.checked;
-            this.classList.toggle('selected', cb.checked);
-            updateSelectAllState();
-            updateMatchCount();
-        });
+  box.querySelectorAll('.match-item').forEach(item => {
+    item.addEventListener('click', function(e) {
+      if (e.target.type === 'checkbox') return;
+      const cb = this.querySelector('.match-checkbox');
+      cb.checked = !cb.checked;
+      this.classList.toggle('selected', cb.checked);
+      updateSelectAllMatchState(); updateMatchCount();
     });
-
-    box.querySelectorAll('.match-checkbox').forEach(cb => {
-        cb.addEventListener('change', function() {
-            this.closest('.match-item').classList.toggle('selected', this.checked);
-            updateSelectAllState();
-            updateMatchCount();
-        });
+  });
+  box.querySelectorAll('.match-checkbox').forEach(cb => {
+    cb.addEventListener('change', function() {
+      this.closest('.match-item').classList.toggle('selected', this.checked);
+      updateSelectAllMatchState(); updateMatchCount();
     });
-
-    // Restore select-all state
-    selectAll.checked = false;
-    selectAll.indeterminate = false;
+  });
+  document.getElementById('selectAllMatches').checked = false;
+  document.getElementById('selectAllMatches').indeterminate = false;
 }
 
-function updateSelectAllState() {
-    const all      = document.querySelectorAll('.match-checkbox');
-    const checked  = document.querySelectorAll('.match-checkbox:checked');
-    const selectAll = document.getElementById('selectAllMatches');
-    if (checked.length === 0) {
-        selectAll.checked = false;
-        selectAll.indeterminate = false;
-    } else if (checked.length === all.length) {
-        selectAll.checked = true;
-        selectAll.indeterminate = false;
-    } else {
-        selectAll.checked = false;
-        selectAll.indeterminate = true;
-    }
+function updateSelectAllMatchState() {
+  const all = document.querySelectorAll('.match-checkbox');
+  const chk = document.querySelectorAll('.match-checkbox:checked');
+  const sa  = document.getElementById('selectAllMatches');
+  if (chk.length===0) { sa.checked=false; sa.indeterminate=false; }
+  else if (chk.length===all.length) { sa.checked=true; sa.indeterminate=false; }
+  else { sa.checked=false; sa.indeterminate=true; }
 }
 
 function updateMatchCount() {
-    const total    = matchedGroups.length;
-    const selected = document.querySelectorAll('.match-checkbox:checked').length;
-    const totalCodes = matchedGroups.reduce((s, g) => s + g.codes.length, 0);
-
-    let text = `${total} destination${total !== 1 ? 's' : ''} · ${totalCodes} code${totalCodes !== 1 ? 's' : ''}`;
-    if (selected > 0) {
-        const selCodes = matchedGroups
-            .filter(g => getSelectedMatchZones().includes(g.zone))
-            .reduce((s, g) => s + g.codes.length, 0);
-        text += ` — ${selected} selected · ${selCodes} codes`;
-    }
-    document.getElementById('matchCount').innerText = text;
+  const total = matchedGroups.length;
+  const totalCodes = matchedGroups.reduce((s,g)=>s+g.codes.length,0);
+  const sel   = document.querySelectorAll('.match-checkbox:checked').length;
+  let text = `${total} destination${total!==1?'s':''} · ${totalCodes} codes`;
+  if (sel > 0) {
+    const selCodes = matchedGroups.filter(g => getSelectedMatchZones().includes(g.zone)).reduce((s,g)=>s+g.codes.length,0);
+    text += ` — ${sel} selected · ${selCodes} codes`;
+  }
+  document.getElementById('matchCount').innerText = text;
 }
 
-// Select All checkbox in match box
 document.getElementById('selectAllMatches').addEventListener('change', function() {
-    document.querySelectorAll('.match-checkbox').forEach(cb => {
-        cb.checked = this.checked;
-        cb.closest('.match-item').classList.toggle('selected', this.checked);
-    });
-    updateMatchCount();
+  document.querySelectorAll('.match-checkbox').forEach(cb => {
+    cb.checked = this.checked;
+    cb.closest('.match-item').classList.toggle('selected', this.checked);
+  });
+  updateMatchCount();
 });
 
-// ─── Render: Preview ──────────────────────────────────────────────────
-function getPreviewGroups() {
-    let grouped = {};
-    exportRows.forEach(r => {
-        if (!grouped[r.zone]) {
-            grouped[r.zone] = { zone: r.zone, codes: [], rate: r.rate, effectiveDate: r.effectiveDate, initial: r.initial, recurring: r.recurring };
-        }
-        grouped[r.zone].codes.push(r.code);
+let searchTimeout;
+document.getElementById('searchBox').addEventListener('input', function() {
+  clearTimeout(searchTimeout);
+  const value = this.value.toLowerCase().trim();
+  searchTimeout = setTimeout(() => {
+    if (!value) { matchedGroups = []; renderMatches(); return; }
+    const tokens = value.split(' ').filter(t => t);
+    const groupMap = {};
+    masterData.filter(row => {
+      const z = row.zone.toLowerCase(), c = row.code.toLowerCase();
+      return tokens.every(t => z.includes(t) || c.includes(t));
+    }).forEach(row => {
+      if (!groupMap[row.zone]) groupMap[row.zone] = { zone: row.zone, codes: [] };
+      groupMap[row.zone].codes.push(row.code);
     });
-    return Object.values(grouped);
+    matchedGroups = Object.values(groupMap);
+    renderMatches();
+  }, 150);
+});
+
+// ═══════════════════════════════════════════════════════
+// ADD / UPDATE
+// ═══════════════════════════════════════════════════════
+document.getElementById('addBtn').addEventListener('click', function() {
+  const rate = document.getElementById('rate').value;
+  if (!rate) { showToast('Please enter a rate', 'danger'); return; }
+  const effectiveDate = document.getElementById('effectiveDate').value;
+  const today = new Date().toISOString().split('T')[0];
+  if (effectiveDate < today) { showToast('Date cannot be in the past', 'danger'); return; }
+  const selectedZones = getSelectedMatchZones();
+  if (selectedZones.length === 0) { showToast('Select at least one destination', 'danger'); return; }
+
+  let added = 0, updated = 0;
+  matchedGroups.filter(g => selectedZones.includes(g.zone)).forEach(group => {
+    const saved = zonePeriods[group.zone.toLowerCase()];
+    let initial = saved ? saved.initial : document.getElementById('initialPeriod').value;
+    let recurring = saved ? saved.recurring : document.getElementById('recurringPeriod').value;
+    if (!saved) saveZonePeriod(group.zone, initial, recurring);
+    group.codes.forEach(code => {
+      const ex = exportRows.find(x => x.zone === group.zone && x.code === code);
+      if (ex) { ex.rate = rate; ex.effectiveDate = effectiveDate; ex.initial = initial; ex.recurring = recurring; updated++; }
+      else { exportRows.push({ zone: group.zone, code, rate, effectiveDate, initial, recurring }); added++; }
+    });
+  });
+
+  renderPreview(); renderMatches();
+  triggerAutosave();
+  showToast(`Added ${added}, updated ${updated} codes ✓`, 'success');
+});
+
+document.getElementById('clearMatchesBtn').addEventListener('click', () => {
+  matchedGroups = [];
+  document.getElementById('searchBox').value = '';
+  renderMatches();
+});
+
+// ═══════════════════════════════════════════════════════
+// PREVIEW
+// ═══════════════════════════════════════════════════════
+function getPreviewGroups() {
+  const grouped = {};
+  exportRows.forEach(r => {
+    if (!grouped[r.zone]) grouped[r.zone] = { zone:r.zone, codes:[], rate:r.rate, effectiveDate:r.effectiveDate, initial:r.initial, recurring:r.recurring };
+    grouped[r.zone].codes.push(r.code);
+  });
+  return Object.values(grouped);
 }
 
 function renderPreview() {
-    const body = document.getElementById('previewBody');
-    const groups = getPreviewGroups();
+  const body   = document.getElementById('previewBody');
+  const groups = getPreviewGroups();
 
-    let html = '';
-    groups.forEach(group => {
-        const codePreview = group.codes.slice(0, 3).join(', ')
-            + (group.codes.length > 3 ? ` <span class="badge">+${group.codes.length - 3} more</span>` : '');
+  // stats
+  const uniqueRates = new Set(exportRows.map(r => r.rate)).size;
+  document.getElementById('statDest').innerText  = groups.length;
+  document.getElementById('statCodes').innerText = exportRows.length;
+  document.getElementById('statRates').innerText = uniqueRates;
 
-        html += `
-        <tr>
-            <td><input type="checkbox" class="preview-checkbox" data-zone="${group.zone}"></td>
-            <td>${group.zone}</td>
-            <td>${codePreview}</td>
-            <td>
-                <input class="preview-input" value="${group.rate}"
-                    data-zone="${group.zone}" data-field="rate">
-            </td>
-            <td>
-                <input type="date" value="${group.effectiveDate}"
-                    data-zone="${group.zone}" data-field="effectiveDate">
-            </td>
-            <td>
-                <input class="preview-input" value="${group.initial}"
-                    data-zone="${group.zone}" data-field="initial">
-            </td>
-            <td>
-                <input class="preview-input" value="${group.recurring}"
-                    data-zone="${group.zone}" data-field="recurring">
-            </td>
-            <td>
-                <button class="danger action-btn delete-row-btn" data-zone="${group.zone}">Delete</button>
-            </td>
-        </tr>`;
-    });
-
-    body.innerHTML = html;
-
-    // Checkbox listeners → update bulk bar
-    body.querySelectorAll('.preview-checkbox').forEach(cb => {
-        cb.addEventListener('change', updateBulkBar);
-    });
-
-    // Select All preview
+  if (groups.length === 0) {
+    body.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--gray-400);font-size:13px;">No routes added yet</td></tr>`;
     document.getElementById('selectAllPreview').checked = false;
-    document.getElementById('selectAllPreview').indeterminate = false;
+    updateBulkBar(); return;
+  }
 
-    updateStats();
-    updateBulkBar();
+  body.innerHTML = groups.map((group, i) => {
+    const codePreview = group.codes.slice(0,3).join(', ') + (group.codes.length>3?` <span class="badge">+${group.codes.length-3}</span>`:'');
+    return `<tr>
+      <td><input type="checkbox" class="preview-checkbox" data-zone="${group.zone}"></td>
+      <td class="row-num">${i+1}</td>
+      <td style="font-weight:600;">${group.zone}</td>
+      <td style="font-family:var(--mono);font-size:12px;">${codePreview}</td>
+      <td><input class="preview-input" value="${group.rate}" data-zone="${group.zone}" data-field="rate"></td>
+      <td><input type="date" class="preview-input" value="${group.effectiveDate}" data-zone="${group.zone}" data-field="effectiveDate"></td>
+      <td><input class="preview-input" value="${group.initial}" data-zone="${group.zone}" data-field="initial" style="width:50px;"></td>
+      <td><input class="preview-input" value="${group.recurring}" data-zone="${group.zone}" data-field="recurring" style="width:50px;"></td>
+      <td><button class="btn btn-danger btn-sm delete-row-btn" data-zone="${group.zone}" style="padding:4px 8px;font-size:11px;">✕</button></td>
+    </tr>`;
+  }).join('');
+
+  body.querySelectorAll('.preview-checkbox').forEach(cb => cb.addEventListener('change', updateBulkBar));
+  document.getElementById('selectAllPreview').checked = false;
+  document.getElementById('selectAllPreview').indeterminate = false;
+  updateBulkBar();
 }
 
 function getSelectedPreviewZones() {
-    return Array.from(
-        document.querySelectorAll('.preview-checkbox:checked')
-    ).map(cb => cb.dataset.zone);
+  return Array.from(document.querySelectorAll('.preview-checkbox:checked')).map(cb => cb.dataset.zone);
 }
 
-// ─── Bulk Bar ─────────────────────────────────────────────────────────
 function updateBulkBar() {
-    const selected = getSelectedPreviewZones();
-    const bar = document.getElementById('bulkBar');
-    const info = document.getElementById('bulkInfo');
-    if (selected.length > 0) {
-        bar.classList.add('visible');
-        info.innerText = `${selected.length} destination${selected.length !== 1 ? 's' : ''} selected`;
-    } else {
-        bar.classList.remove('visible');
-    }
-
-    // Update select-all-preview state
-    const all     = document.querySelectorAll('.preview-checkbox');
-    const checked = document.querySelectorAll('.preview-checkbox:checked');
-    const saEl    = document.getElementById('selectAllPreview');
-    if (all.length === 0) {
-        saEl.checked = false; saEl.indeterminate = false;
-    } else if (checked.length === all.length) {
-        saEl.checked = true; saEl.indeterminate = false;
-    } else if (checked.length === 0) {
-        saEl.checked = false; saEl.indeterminate = false;
-    } else {
-        saEl.checked = false; saEl.indeterminate = true;
-    }
+  const sel  = getSelectedPreviewZones();
+  const bar  = document.getElementById('bulkBar');
+  const info = document.getElementById('bulkInfo');
+  bar.classList.toggle('visible', sel.length > 0);
+  if (sel.length > 0) info.innerText = `${sel.length} destination${sel.length!==1?'s':''} selected`;
+  const all = document.querySelectorAll('.preview-checkbox');
+  const chk = document.querySelectorAll('.preview-checkbox:checked');
+  const sa  = document.getElementById('selectAllPreview');
+  if (!all.length || !chk.length) { sa.checked=false; sa.indeterminate=false; }
+  else if (chk.length===all.length) { sa.checked=true; sa.indeterminate=false; }
+  else { sa.checked=false; sa.indeterminate=true; }
 }
 
-// Select All preview
 document.getElementById('selectAllPreview').addEventListener('change', function() {
-    document.querySelectorAll('.preview-checkbox').forEach(cb => {
-        cb.checked = this.checked;
-    });
-    updateBulkBar();
+  document.querySelectorAll('.preview-checkbox').forEach(cb => { cb.checked = this.checked; });
+  updateBulkBar();
 });
 
-// Apply Bulk
 document.getElementById('applyBulkBtn').addEventListener('click', function() {
-    const zones    = getSelectedPreviewZones();
-    if (zones.length === 0) { showToast('No rows selected', 'danger'); return; }
-
-    const bulkRate = document.getElementById('bulkRate').value.trim();
-    const bulkDate = document.getElementById('bulkDate').value;
-
-    if (!bulkRate && !bulkDate) {
-        showToast('Enter a rate or date to apply', 'danger');
-        return;
-    }
-
-    if (bulkDate) {
-        const today = new Date().toISOString().split('T')[0];
-        if (bulkDate < today) { showToast('Effective date cannot be before today', 'danger'); return; }
-    }
-
-    takeSnapshot(`Bulk edit ${zones.length} destinations`);
-
-    exportRows.forEach(r => {
-        if (zones.includes(r.zone)) {
-            if (bulkRate) r.rate = bulkRate;
-            if (bulkDate) r.effectiveDate = bulkDate;
-        }
-    });
-
-    document.getElementById('bulkRate').value = '';
-    document.getElementById('bulkDate').value = '';
-
-    renderPreview();
-    showToast(`Applied to ${zones.length} destination${zones.length !== 1 ? 's' : ''} ✓`, 'success');
+  const zones    = getSelectedPreviewZones();
+  if (!zones.length) { showToast('No rows selected', 'danger'); return; }
+  const bulkRate = document.getElementById('bulkRate').value.trim();
+  const bulkDate = document.getElementById('bulkDate').value;
+  if (!bulkRate && !bulkDate) { showToast('Enter rate or date to apply', 'danger'); return; }
+  if (bulkDate && bulkDate < new Date().toISOString().split('T')[0]) { showToast('Date cannot be in the past', 'danger'); return; }
+  takeSnapshot(`Bulk edit ${zones.length} destinations`);
+  exportRows.forEach(r => {
+    if (zones.includes(r.zone)) { if (bulkRate) r.rate=bulkRate; if (bulkDate) r.effectiveDate=bulkDate; }
+  });
+  document.getElementById('bulkRate').value = '';
+  document.getElementById('bulkDate').value = '';
+  renderPreview(); triggerAutosave();
+  showToast(`Applied to ${zones.length} destination${zones.length!==1?'s':''} ✓`, 'success');
 });
 
-// Delete Selected
 document.getElementById('deleteSelectedBtn').addEventListener('click', function() {
-    const zones = getSelectedPreviewZones();
-    if (zones.length === 0) { showToast('No rows selected', 'danger'); return; }
-    confirmAction(this, () => {
-        takeSnapshot(`Delete ${zones.length} destinations`);
-        exportRows = exportRows.filter(r => !zones.includes(r.zone));
-        renderPreview();
-        showToast(`Deleted ${zones.length} destination${zones.length !== 1 ? 's' : ''}`, 'danger');
-    });
+  const zones = getSelectedPreviewZones();
+  if (!zones.length) { showToast('No rows selected', 'danger'); return; }
+  confirmAction(this, () => {
+    takeSnapshot(`Delete ${zones.length} destinations`);
+    exportRows = exportRows.filter(r => !zones.includes(r.zone));
+    renderPreview(); triggerAutosave();
+    showToast(`Deleted ${zones.length} destination${zones.length!==1?'s':''}`, 'danger');
+  });
 });
 
-// ─── Render: Exceptions ───────────────────────────────────────────────
-function renderExceptions() {
-    const body   = document.getElementById('exceptionsBody');
-    const search = (document.getElementById('exceptionsSearch')?.value || '').toLowerCase().trim();
-    let html = '';
-    Object.keys(zonePeriods).sort().forEach(zone => {
-        if (search && !zone.includes(search)) return;
-        const p = zonePeriods[zone];
-        html += `
-        <tr>
-            <td>${zone}</td>
-            <td>${p.initial}</td>
-            <td>${p.recurring}</td>
-            <td>
-                <button class="danger action-btn delete-exception-btn" data-zone="${zone}">Delete</button>
-            </td>
-        </tr>`;
-    });
-    body.innerHTML = html;
-}
-
-// ─── Event Delegation: Preview Table ─────────────────────────────────
+// Preview: inline edit + row delete
 document.getElementById('previewBody').addEventListener('change', function(e) {
-    const input = e.target.closest('input[data-zone][data-field]');
-    if (!input) return;
-    const zone  = input.dataset.zone;
-    const field = input.dataset.field;
-    const value = input.value;
-
-    if (field === 'effectiveDate') {
-        const today = new Date().toISOString().split('T')[0];
-        if (value < today) {
-            showToast('Effective date cannot be before today', 'danger');
-            renderPreview();
-            return;
-        }
-    }
-
-    exportRows.forEach(r => { if (r.zone === zone) r[field] = value; });
-
-    if (field === 'initial' || field === 'recurring') {
-        const row = exportRows.find(r => r.zone === zone);
-        saveZonePeriod(zone, row.initial, row.recurring);
-    }
-
-    renderPreview();
+  const input = e.target.closest('input[data-zone][data-field]');
+  if (!input) return;
+  const zone=input.dataset.zone, field=input.dataset.field, value=input.value;
+  if (field==='effectiveDate' && value < new Date().toISOString().split('T')[0]) {
+    showToast('Date cannot be in the past', 'danger'); renderPreview(); return;
+  }
+  exportRows.forEach(r => { if (r.zone===zone) r[field]=value; });
+  if (field==='initial'||field==='recurring') {
+    const row = exportRows.find(r=>r.zone===zone);
+    saveZonePeriod(zone, row.initial, row.recurring);
+  }
+  renderPreview(); triggerAutosave();
 });
 
 document.getElementById('previewBody').addEventListener('click', function(e) {
-    const btn = e.target.closest('.delete-row-btn');
-    if (!btn) return;
-    confirmAction(btn, () => {
-        const zone = btn.dataset.zone;
-        takeSnapshot(`Delete "${zone}"`);
-        exportRows = exportRows.filter(r => r.zone !== zone);
-        renderPreview();
-        showToast(`Deleted "${zone}"`, 'danger');
-    });
+  const btn = e.target.closest('.delete-row-btn');
+  if (!btn) return;
+  confirmAction(btn, () => {
+    takeSnapshot(`Delete "${btn.dataset.zone}"`);
+    exportRows = exportRows.filter(r => r.zone!==btn.dataset.zone);
+    renderPreview(); triggerAutosave();
+    showToast(`Deleted "${btn.dataset.zone}"`, 'danger');
+  });
 });
 
-// ─── Event Delegation: Exceptions Table ──────────────────────────────
-document.getElementById('exceptionsBody').addEventListener('click', function(e) {
-    const btn = e.target.closest('.delete-exception-btn');
-    if (!btn) return;
-    confirmAction(btn, () => {
-        const zone = btn.dataset.zone;
-        delete zonePeriods[zone];
-        localStorage.setItem('zonePeriods', JSON.stringify(zonePeriods));
-        renderExceptions();
-        updateStats();
-        showToast(`Exception "${zone}" deleted`, 'danger');
-    });
+document.getElementById('clearAllBtn').addEventListener('click', function() {
+  confirmAction(this, () => {
+    takeSnapshot('Clear All');
+    exportRows = []; renderPreview(); triggerAutosave();
+    showToast('All routes cleared', 'danger');
+  });
 });
 
-// ─── Toggle Exceptions ────────────────────────────────────────────────
-function toggleExceptions() {
-    const container = document.getElementById('exceptionsContainer');
-    const btn       = document.getElementById('exceptionsToggleBtn');
-    if (container.style.display === 'none') {
-        container.style.display = 'block';
-        btn.innerText = 'Collapse';
-    } else {
-        container.style.display = 'none';
-        btn.innerText = 'Expand';
-    }
+// ═══════════════════════════════════════════════════════
+// EXCEPTIONS
+// ═══════════════════════════════════════════════════════
+function updateExcBadge() {
+  document.getElementById('excCountBadge').innerText = Object.keys(zonePeriods).length;
 }
 
-// ─── Delete Filtered Exceptions ───────────────────────────────────────
+function renderExceptions() {
+  const body   = document.getElementById('excTableBody');
+  const search = (document.getElementById('exceptionsSearch')?.value || '').toLowerCase().trim();
+  let html = '';
+  Object.keys(zonePeriods).sort().forEach(zone => {
+    if (search && !zone.includes(search)) return;
+    const p = zonePeriods[zone];
+    html += `<tr>
+      <td style="font-weight:500;">${zone}</td>
+      <td style="font-family:var(--mono);">${p.initial}</td>
+      <td style="font-family:var(--mono);">${p.recurring}</td>
+      <td><button class="btn btn-danger btn-sm delete-exc-btn" data-zone="${zone}" style="padding:4px 8px;font-size:11px;">✕</button></td>
+    </tr>`;
+  });
+  body.innerHTML = html || `<tr><td colspan="4" style="text-align:center;padding:16px;color:var(--gray-400);font-size:13px;">No exceptions</td></tr>`;
+  updateExcBadge();
+}
+
+document.getElementById('excTableBody').addEventListener('click', function(e) {
+  const btn = e.target.closest('.delete-exc-btn');
+  if (!btn) return;
+  confirmAction(btn, () => {
+    delete zonePeriods[btn.dataset.zone];
+    localStorage.setItem('zonePeriods', JSON.stringify(zonePeriods));
+    renderExceptions(); triggerAutosave();
+    showToast(`Exception "${btn.dataset.zone}" deleted`, 'danger');
+  });
+});
+
+document.getElementById('exceptionsToggle').addEventListener('click', function() {
+  const body    = document.getElementById('exceptionsBody');
+  const chevron = document.getElementById('excChevron');
+  const open    = body.classList.toggle('open');
+  chevron.style.transform = open ? 'rotate(180deg)' : '';
+});
+
+document.getElementById('exceptionsSearch').addEventListener('input', renderExceptions);
+
 document.getElementById('deleteFilteredBtn').addEventListener('click', function() {
-    const search = document.getElementById('exceptionsSearch').value.toLowerCase().trim();
-    if (!search) { showToast('Please search first', 'danger'); return; }
-    const matches = Object.keys(zonePeriods).filter(z => z.includes(search));
-    if (matches.length === 0) { showToast('No matches to delete'); return; }
-    confirmAction(this, () => {
-        matches.forEach(zone => delete zonePeriods[zone]);
-        localStorage.setItem('zonePeriods', JSON.stringify(zonePeriods));
-        renderExceptions();
-        updateStats();
-        showToast(`Deleted ${matches.length} exception(s)`, 'danger');
-    });
+  const search = document.getElementById('exceptionsSearch').value.toLowerCase().trim();
+  if (!search) { showToast('Search first to filter', 'danger'); return; }
+  const matches = Object.keys(zonePeriods).filter(z => z.includes(search));
+  if (!matches.length) { showToast('No matches', 'danger'); return; }
+  confirmAction(this, () => {
+    matches.forEach(z => delete zonePeriods[z]);
+    localStorage.setItem('zonePeriods', JSON.stringify(zonePeriods));
+    renderExceptions(); triggerAutosave();
+    showToast(`Deleted ${matches.length} exception(s)`, 'danger');
+  });
 });
 
-// ─── Quick Date ───────────────────────────────────────────────────────
-document.getElementById('quickDate').addEventListener('change', function() {
-    setDate(parseInt(this.value));
-});
-
-// ─── Exceptions Search ────────────────────────────────────────────────
-document.getElementById('exceptionsSearch')?.addEventListener('input', function() {
-    renderExceptions();
-});
-
-// ─── Load Master File ─────────────────────────────────────────────────
-document.getElementById('masterFile').addEventListener('change', async function(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    const data     = await file.arrayBuffer();
-    const workbook = XLSX.read(data);
-    const sheet    = workbook.Sheets[workbook.SheetNames[0]];
-    const raw      = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-    masterData = [];
-    raw.forEach((row, index) => {
-        if (index === 0) return;
-        if (!row[0] || !row[1]) return;
-        masterData.push({ code: String(row[0]).trim(), zone: String(row[1]).trim() });
-    });
-    saveMasterList(masterData);
-    updateStats();
-    showToast(`Master list loaded: ${masterData.length} routes`, 'success');
-});
-
-// ─── Load Template ────────────────────────────────────────────────────
-document.getElementById('templateFile').addEventListener('change', async function(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    const data = await file.arrayBuffer();
-    templateWorkbook = XLSX.read(data);
-    saveTemplate(data, file.name);
-    document.getElementById('templateStatus').innerText = 'Loaded: ' + file.name;
-    showToast('Template loaded: ' + file.name, 'success');
-});
-
-// ─── Search → group by destination ───────────────────────────────────
-let searchTimeout;
-document.getElementById('searchBox').addEventListener('input', function() {
-    clearTimeout(searchTimeout);
-    const value = this.value.toLowerCase().trim();
-    searchTimeout = setTimeout(() => {
-        if (!value) {
-            matchedGroups = [];
-            renderMatches();
-            return;
-        }
-        const tokens = value.split(' ').filter(t => t.trim() !== '');
-
-        // Filter matching codes
-        const matchingCodes = masterData.filter(row => {
-            const zone = row.zone.toLowerCase();
-            const code = row.code.toLowerCase();
-            return tokens.every(token => zone.includes(token) || code.includes(token));
-        });
-
-        // Group by zone
-        const groupMap = {};
-        matchingCodes.forEach(row => {
-            if (!groupMap[row.zone]) groupMap[row.zone] = { zone: row.zone, codes: [] };
-            groupMap[row.zone].codes.push(row.code);
-        });
-        matchedGroups = Object.values(groupMap);
-
-        renderMatches();
-    }, 150);
-});
-
-// ─── Add / Update Selected ────────────────────────────────────────────
-document.getElementById('addBtn').addEventListener('click', function() {
-    const rate = document.getElementById('rate').value;
-    if (!rate) { showToast('Please enter a rate', 'danger'); return; }
-
-    const effectiveDate = document.getElementById('effectiveDate').value;
-    const today = new Date().toISOString().split('T')[0];
-    if (effectiveDate < today) { showToast('Effective date cannot be before today', 'danger'); return; }
-
-    const selectedZones = getSelectedMatchZones();
-    if (selectedZones.length === 0) { showToast('Select at least one destination', 'danger'); return; }
-
-    // Get only the codes for selected zones
-    const selectedGroups = matchedGroups.filter(g => selectedZones.includes(g.zone));
-
-    let added = 0, updated = 0;
-
-    selectedGroups.forEach(group => {
-        const saved = zonePeriods[group.zone.toLowerCase()];
-        let initial = 1, recurring = 1;
-        if (saved) {
-            initial   = saved.initial;
-            recurring = saved.recurring;
-        } else {
-            initial   = document.getElementById('initialPeriod').value;
-            recurring = document.getElementById('recurringPeriod').value;
-            saveZonePeriod(group.zone, initial, recurring);
-        }
-
-        group.codes.forEach(code => {
-            const existing = exportRows.find(x => x.zone === group.zone && x.code === code);
-            if (existing) {
-                existing.rate          = rate;
-                existing.effectiveDate = effectiveDate;
-                existing.initial       = initial;
-                existing.recurring     = recurring;
-                updated++;
-            } else {
-                exportRows.push({ zone: group.zone, code, rate, effectiveDate, initial, recurring });
-                added++;
-            }
-        });
-    });
-
-    renderPreview();
-    // Refresh match box to update "already added" badges
-    renderMatches();
-    showToast(`Added ${added}, updated ${updated} codes ✓`, 'success');
-});
-
-// ─── Clear Matches ────────────────────────────────────────────────────
-document.getElementById('clearMatchesBtn').addEventListener('click', function() {
-    matchedGroups = [];
-    document.getElementById('searchBox').value = '';
-    document.getElementById('matchHeader').style.display = 'none';
-    renderMatches();
-});
-
-// ─── Clear All ────────────────────────────────────────────────────────
-document.getElementById('clearAllBtn').addEventListener('click', function() {
-    confirmAction(this, () => {
-        takeSnapshot('Clear All');
-        exportRows = [];
-        renderPreview();
-        showToast('All routes cleared', 'danger');
-    });
-});
-
-// ─── Export ───────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════
+// EXPORT
+// ═══════════════════════════════════════════════════════
 document.getElementById('exportBtn').addEventListener('click', function() {
-    if (!templateWorkbook) { showToast('Please upload a template first', 'danger'); return; }
-    if (exportRows.length === 0) { showToast('Nothing to export', 'danger'); return; }
+  if (!templateWorkbook) { showToast('Upload a template first (⚙ gear)', 'danger'); return; }
+  if (!exportRows.length) { showToast('Nothing to export', 'danger'); return; }
 
-    const wbCopy = XLSX.read(
-        XLSX.write(templateWorkbook, { type: 'array', bookType: 'xlsx' }),
-        { type: 'array' }
-    );
-    const ws       = wbCopy.Sheets[wbCopy.SheetNames[0]];
-    const startRow = 17;
+  const startRow = parseInt(document.getElementById('startRowInput').value) || 17;
+  const wbCopy   = XLSX.read(XLSX.write(templateWorkbook, { type:'array', bookType:'xlsx' }), { type:'array' });
+  const ws       = wbCopy.Sheets[wbCopy.SheetNames[0]];
 
-    for (let i = startRow; i < startRow + 10000; i++) {
-        ['A','B','C','D','E','F','G'].forEach(col => { delete ws[col + i]; });
-    }
+  for (let i = startRow; i < startRow + 10000; i++) {
+    ['A','B','C','D','E','F','G'].forEach(col => { delete ws[col+i]; });
+  }
 
-    exportRows.forEach((r, index) => {
-        const row = startRow + index;
-        ws['A' + row] = { t: 's', v: r.zone };
-        ws['B' + row] = { t: 's', v: r.code };
-        ws['C' + row] = { t: 'n', v: Number(r.rate) };
-        ws['D' + row] = { t: 's', v: '' };
-        ws['E' + row] = { t: 's', v: formatDate(r.effectiveDate) };
-        ws['F' + row] = { t: 'n', v: Number(r.initial) };
-        ws['G' + row] = { t: 'n', v: Number(r.recurring) };
-    });
+  exportRows.forEach((r, idx) => {
+    const row = startRow + idx;
+    ws['A'+row] = { t:'s', v:r.zone };
+    ws['B'+row] = { t:'s', v:r.code };
+    ws['C'+row] = { t:'n', v:Number(r.rate) };
+    ws['D'+row] = { t:'s', v:'' };
+    ws['E'+row] = { t:'s', v:formatDate(r.effectiveDate) };
+    ws['F'+row] = { t:'n', v:Number(r.initial) };
+    ws['G'+row] = { t:'n', v:Number(r.recurring) };
+  });
 
-    ws['!ref'] = `A1:G${startRow + exportRows.length}`;
+  ws['!ref'] = `A1:G${startRow + exportRows.length}`;
 
-    const customName = document.getElementById('exportFileName').value.trim();
-    const now        = new Date();
-    const timestamp  = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}`;
-    const finalName  = (customName || 'Ratesheet') + '_' + timestamp + '.xlsx';
-
-    XLSX.writeFile(wbCopy, finalName);
-    showToast(`Exported: ${finalName} ✓`, 'success');
+  const name = document.getElementById('exportFileName').value.trim() || 'Ratesheet';
+  const now  = new Date();
+  const ts   = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}`;
+  XLSX.writeFile(wbCopy, `${name}_${ts}.xlsx`);
+  showToast(`Exported: ${name}_${ts}.xlsx ✓`, 'success');
 });
 
-// ─── Init ─────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════
 loadMasterList();
 loadTemplate();
-loadZonePeriods();
-updateStats();
+
+// Load sessions — pick most recent or first
+const initSessions = getAllSessions();
+const initKeys     = Object.keys(initSessions).sort();
+refreshSessionDropdown(initKeys[0] || '');
+
+if (initKeys.length > 0) {
+  loadSessionByName(initKeys[0]);
+} else {
+  zonePeriods = {};
+  renderPreview();
+  renderExceptions();
+  updateExcBadge();
+  document.getElementById('autosaveText').innerText = 'No session';
+}
 
 </script>
 </body>
