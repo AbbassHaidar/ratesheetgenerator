@@ -1069,8 +1069,7 @@ function saveCurrentSession() {
   if (!currentSession) return;
   const sessions = getAllSessions();
   sessions[currentSession] = {
-    exportRows:  JSON.parse(JSON.stringify(exportRows)),
-    zonePeriods: JSON.parse(JSON.stringify(zonePeriods)),
+    exportRows: JSON.parse(JSON.stringify(exportRows)),
     savedAt: new Date().toISOString()
   };
   localStorage.setItem('sessions', JSON.stringify(sessions));
@@ -1106,9 +1105,7 @@ function loadSessionByName(name) {
   const sessions = getAllSessions();
   const s = sessions[name];
   if (!s) return;
-  exportRows  = JSON.parse(JSON.stringify(s.exportRows  || []));
-  zonePeriods = JSON.parse(JSON.stringify(s.zonePeriods || {}));
-  localStorage.setItem('zonePeriods', JSON.stringify(zonePeriods));
+  exportRows  = JSON.parse(JSON.stringify(s.exportRows || []));
   currentSession = name;
   renderPreview();
   renderExceptions();
@@ -1147,12 +1144,10 @@ function createNewSession() {
   const sessions = getAllSessions();
   if (sessions[name]) { showToast('Session name already exists', 'danger'); return; }
   // Save blank session
-  sessions[name] = { exportRows: [], zonePeriods: {}, savedAt: new Date().toISOString() };
+  sessions[name] = { exportRows: [], savedAt: new Date().toISOString() };
   localStorage.setItem('sessions', JSON.stringify(sessions));
-  // Clear current state
+  // Clear only export rows for new session
   exportRows  = [];
-  zonePeriods = {};
-  localStorage.setItem('zonePeriods', '{}');
   currentSession = name;
   refreshSessionDropdown(name);
   document.getElementById('newSessionModal').classList.remove('open');
@@ -1173,7 +1168,7 @@ document.getElementById('btnDeleteSession').addEventListener('click', function()
     localStorage.setItem('sessions', JSON.stringify(sessions));
     // load first remaining or clear
     const remaining = Object.keys(sessions).sort();
-    exportRows = []; zonePeriods = {};
+    exportRows = [];
     currentSession = null;
     if (remaining.length > 0) {
       refreshSessionDropdown(remaining[0]);
@@ -1645,19 +1640,27 @@ document.getElementById('exportBtn').addEventListener('click', function() {
 loadMasterList();
 loadTemplate();
 
-// Load sessions — pick most recent or first
+// Load zone periods globally — shared across all sessions
+try { zonePeriods = JSON.parse(localStorage.getItem('zonePeriods') || '{}'); } catch { zonePeriods = {}; }
+renderExceptions();
+updateExcBadge();
+
+// Load sessions — auto-create Default if none exist
 const initSessions = getAllSessions();
 const initKeys     = Object.keys(initSessions).sort();
-refreshSessionDropdown(initKeys[0] || '');
 
-if (initKeys.length > 0) {
-  loadSessionByName(initKeys[0]);
-} else {
-  zonePeriods = {};
+if (initKeys.length === 0) {
+  const sessions = {};
+  sessions['Default'] = { exportRows: [], savedAt: new Date().toISOString() };
+  localStorage.setItem('sessions', JSON.stringify(sessions));
+  currentSession = 'Default';
+  exportRows = [];
+  refreshSessionDropdown('Default');
   renderPreview();
-  renderExceptions();
-  updateExcBadge();
-  document.getElementById('autosaveText').innerText = 'No session';
+  document.getElementById('autosaveText').innerText = 'Saved';
+} else {
+  refreshSessionDropdown(initKeys[0]);
+  loadSessionByName(initKeys[0]);
 }
 
 </script>
