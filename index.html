@@ -835,11 +835,19 @@ input[type=date].preview-input { width: 120px; }
           <div class="form-row">
             <div class="form-group">
               <label>Initial (Min)</label>
-              <input type="number" id="initialPeriod" value="1">
+              <select id="initialPeriod">
+                <option value="1" selected>1</option>
+                <option value="6">6</option>
+                <option value="60">60</option>
+              </select>
             </div>
             <div class="form-group">
               <label>Recurring (Min)</label>
-              <input type="number" id="recurringPeriod" value="1">
+              <select id="recurringPeriod">
+                <option value="1" selected>1</option>
+                <option value="6">6</option>
+                <option value="60">60</option>
+              </select>
             </div>
           </div>
         </div>
@@ -1395,6 +1403,11 @@ document.getElementById('addBtn').addEventListener('click', function() {
     });
   });
 
+  // Reset fields after add
+  document.getElementById('rate').value = '';
+  document.getElementById('initialPeriod').value = '1';
+  document.getElementById('recurringPeriod').value = '1';
+
   renderPreview(); renderMatches();
   triggerAutosave();
   showToast(`Added ${added}, updated ${updated} codes ✓`, 'success');
@@ -1443,8 +1456,16 @@ function renderPreview() {
       <td style="font-family:var(--mono);font-size:12px;">${codePreview}</td>
       <td><input class="preview-input" value="${group.rate}" data-zone="${group.zone}" data-field="rate"></td>
       <td><input type="date" class="preview-input" value="${group.effectiveDate}" data-zone="${group.zone}" data-field="effectiveDate"></td>
-      <td><input class="preview-input" value="${group.initial}" data-zone="${group.zone}" data-field="initial" style="width:50px;"></td>
-      <td><input class="preview-input" value="${group.recurring}" data-zone="${group.zone}" data-field="recurring" style="width:50px;"></td>
+      <td><select class="preview-input" data-zone="${group.zone}" data-field="initial" style="width:60px;padding:4px 6px;font-size:12px;">
+        <option value="1" ${group.initial==1?'selected':''}>1</option>
+        <option value="6" ${group.initial==6?'selected':''}>6</option>
+        <option value="60" ${group.initial==60?'selected':''}>60</option>
+      </select></td>
+      <td><select class="preview-input" data-zone="${group.zone}" data-field="recurring" style="width:60px;padding:4px 6px;font-size:12px;">
+        <option value="1" ${group.recurring==1?'selected':''}>1</option>
+        <option value="6" ${group.recurring==6?'selected':''}>6</option>
+        <option value="60" ${group.recurring==60?'selected':''}>60</option>
+      </select></td>
       <td><button class="btn btn-danger btn-sm delete-row-btn" data-zone="${group.zone}" style="padding:4px 8px;font-size:11px;">✕</button></td>
     </tr>`;
   }).join('');
@@ -1637,6 +1658,11 @@ document.getElementById('exportBtn').addEventListener('click', function() {
 // ═══════════════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════════════
+// Prevent scroll from changing number input values
+document.addEventListener('wheel', function(e) {
+  if (e.target.type === 'number') e.target.blur();
+}, { passive: false });
+
 loadMasterList();
 loadTemplate();
 
