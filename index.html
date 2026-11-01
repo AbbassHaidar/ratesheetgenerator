@@ -838,6 +838,7 @@ input[type=date].preview-input { width: 120px; }
               <select id="initialPeriod">
                 <option value="1" selected>1</option>
                 <option value="6">6</option>
+                <option value="12">12</option>
                 <option value="30">30</option>
                 <option value="60">60</option>
               </select>
@@ -847,6 +848,8 @@ input[type=date].preview-input { width: 120px; }
               <select id="recurringPeriod">
                 <option value="1" selected>1</option>
                 <option value="6">6</option>
+                <option value="12">12</option>
+                <option value="30">30</option>
                 <option value="60">60</option>
               </select>
             </div>
@@ -1423,6 +1426,14 @@ document.getElementById('clearMatchesBtn').addEventListener('click', () => {
 // ═══════════════════════════════════════════════════════
 // PREVIEW
 // ═══════════════════════════════════════════════════════
+// ─── Allowed billing periods (single source of truth) ───
+const PERIOD_OPTIONS = [1, 6, 12, 30, 60];
+function periodOptions(current) {
+  return PERIOD_OPTIONS.map(v =>
+    `<option value="${v}" ${Number(current) === v ? 'selected' : ''}>${v}</option>`
+  ).join('');
+}
+
 function getPreviewGroups() {
   const grouped = {};
   exportRows.forEach(r => {
@@ -1458,15 +1469,10 @@ function renderPreview() {
       <td><input class="preview-input" value="${group.rate}" data-zone="${group.zone}" data-field="rate"></td>
       <td><input type="date" class="preview-input" value="${group.effectiveDate}" data-zone="${group.zone}" data-field="effectiveDate"></td>
       <td><select class="preview-input" data-zone="${group.zone}" data-field="initial" style="width:60px;padding:4px 6px;font-size:12px;">
-        <option value="1" ${group.initial==1?'selected':''}>1</option>
-        <option value="6" ${group.initial==6?'selected':''}>6</option>
-        <option value="30" ${group.initial==30?'selected':''}>30</option>
-        <option value="60" ${group.initial==60?'selected':''}>60</option>
+        ${periodOptions(group.initial)}
       </select></td>
       <td><select class="preview-input" data-zone="${group.zone}" data-field="recurring" style="width:60px;padding:4px 6px;font-size:12px;">
-        <option value="1" ${group.recurring==1?'selected':''}>1</option>
-        <option value="6" ${group.recurring==6?'selected':''}>6</option>
-        <option value="60" ${group.recurring==60?'selected':''}>60</option>
+        ${periodOptions(group.recurring)}
       </select></td>
       <td><button class="btn btn-danger btn-sm delete-row-btn" data-zone="${group.zone}" style="padding:4px 8px;font-size:11px;">✕</button></td>
     </tr>`;
@@ -1531,7 +1537,7 @@ document.getElementById('deleteSelectedBtn').addEventListener('click', function(
 
 // Preview: inline edit + row delete
 document.getElementById('previewBody').addEventListener('change', function(e) {
-  const input = e.target.closest('input[data-zone][data-field]');
+  const input = e.target.closest('[data-zone][data-field]');
   if (!input) return;
   const zone=input.dataset.zone, field=input.dataset.field, value=input.value;
   if (field==='effectiveDate' && value < new Date().toISOString().split('T')[0]) {
